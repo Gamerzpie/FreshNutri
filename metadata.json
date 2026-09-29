@@ -1,0 +1,6 @@
+{
+  "name": "FreshNutri – Healthy Recipes, Nutrition & Editorial Food Magazine",
+  "description": "Discover healthy recipes, science-backed nutrition, curated 7-day meal plans, and mindful lifestyle guides from the editors of FreshNutri.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

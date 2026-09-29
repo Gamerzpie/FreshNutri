@@ -1,0 +1,356 @@
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { allMealPlans, getMealPlanById } from '../data/mealPlans';
+import { authors } from '../data/authors';
+import {
+  Calendar,
+  Clock,
+  Flame,
+  Check,
+  Printer,
+  Copy,
+  ArrowLeft,
+  ArrowRight,
+  ShoppingCart,
+  ListOrdered,
+  Utensils,
+} from 'lucide-react';
+
+export const MealPlanDetailView: React.FC = () => {
+  const { routeParams, goBack, navigate, showToast } = useApp();
+  const slug = routeParams.slug || routeParams.id;
+  const plan = getMealPlanById(slug) || allMealPlans[0];
+  const author = authors.find((a) => a.id === plan.authorId);
+
+  // Active day tab state (1 to 7)
+  const [activeDayNumber, setActiveDayNumber] = useState<number>(1);
+
+  // Interactive shopping list checking state
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+
+  const toggleItemCheck = (key: string) => {
+    setCheckedItems((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleCopyShoppingList = () => {
+    let text = `GROCERY SHOPPING LIST: ${plan.title}\n\n`;
+    plan.shoppingList.forEach((cat) => {
+      text += `[${cat.category.toUpperCase()}]\n`;
+      cat.items.forEach((item) => {
+        text += `- ${item}\n`;
+      });
+      text += '\n';
+    });
+    navigator.clipboard.writeText(text);
+    showToast('Grocery shopping list copied to clipboard!', 'success');
+  };
+
+  const currentDay = plan.days.find((d) => d.dayNumber === activeDayNumber) || plan.days[0];
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      {/* Back button & Breadcrumb */}
+      <div className="no-print flex items-center justify-between text-xs text-stone-500">
+        <button
+          onClick={goBack}
+          className="flex items-center gap-1.5 text-stone-600 hover:text-stone-900 transition-colors font-medium"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to meal plans</span>
+        </button>
+
+        <div className="flex items-center gap-1 text-[11px]">
+          <span>Meal Plans</span>
+          <span>/</span>
+          <span className="text-emerald-800 font-medium">{plan.dietType}</span>
+        </div>
+      </div>
+
+      {/* Plan Header */}
+      <header className="space-y-4">
+        <div className="flex items-center gap-2 text-xs text-stone-500 font-mono">
+          <span className="text-emerald-800 font-semibold font-sans">{plan.dietType}</span>
+          <span aria-hidden="true">·</span>
+          <span>7-Day Protocol</span>
+          <span aria-hidden="true">·</span>
+          <span className="tabular-nums font-sans">{plan.caloriesPerDay} Calories/Day Target</span>
+        </div>
+
+        <h1 className="font-serif text-3xl sm:text-5xl font-medium text-stone-900 tracking-tight leading-[1.18] text-balance">
+          {plan.title}
+        </h1>
+
+        <p className="text-sm sm:text-base text-stone-600 leading-relaxed font-sans max-w-3xl">
+          {plan.description}
+        </p>
+
+        {/* Byline & Print/Copy Bar */}
+        <div className="pt-3 border-y border-stone-200 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            {author && (
+              <img
+                src={author.avatar}
+                alt={author.name}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            )}
+            <div>
+              <span className="block font-semibold text-stone-900">
+                Curated by {author?.name || 'FreshNutri Dietitian Team'}
+              </span>
+              <span className="block text-[11px] text-stone-500">
+                {author?.role} · {author?.credentials}
+              </span>
+            </div>
+          </div>
+
+          <div className="no-print flex items-center gap-2">
+            <button
+              onClick={handleCopyShoppingList}
+              className="px-3 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copy Grocery List</span>
+            </button>
+
+            <button
+              onClick={handlePrint}
+              className="px-3 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Plan</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Visual */}
+      <div className="relative aspect-21/9 rounded-2xl overflow-hidden shadow-md bg-stone-100 border border-stone-200">
+        <img
+          src={plan.heroImage}
+          alt={plan.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Batch Preparation Strategy Card */}
+      <section className="bg-stone-50 p-6 sm:p-7 rounded-2xl border border-stone-200 space-y-3">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-800">
+          <ListOrdered className="w-4 h-4" />
+          <span>Sunday Batch Prep Strategy</span>
+        </div>
+        <p className="text-xs text-stone-600">
+          Follow these 3 time-saving kitchen rituals before Monday morning:
+        </p>
+        <ul className="space-y-2 text-xs sm:text-sm text-stone-700 list-disc list-inside">
+          {plan.prepNotes.map((note, idx) => (
+            <li key={idx} className="leading-relaxed">
+              {note}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 7-Day Interactive Day View */}
+      <section className="space-y-6">
+        <div className="border-b border-stone-200 pb-3 flex items-center justify-between">
+          <h2 className="font-serif text-2xl font-semibold text-stone-900">
+            7-Day Meal Calendar
+          </h2>
+          <span className="text-xs text-stone-500 font-mono">
+            {currentDay.dayName} Target: {currentDay.dailyCalories} kcal · {currentDay.dailyProtein}g protein · {currentDay.dailyFiber}g fiber
+          </span>
+        </div>
+
+        {/* Day Tabs (1 to 7) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {plan.days.map((d) => (
+            <button
+              key={d.dayNumber}
+              onClick={() => setActiveDayNumber(d.dayNumber)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex flex-col items-center gap-0.5 min-w-[90px] border ${
+                activeDayNumber === d.dayNumber
+                  ? 'bg-stone-900 border-stone-900 text-white shadow-sm'
+                  : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
+              }`}
+            >
+              <span className="text-[10px] uppercase tracking-wider opacity-80">
+                Day {d.dayNumber}
+              </span>
+              <span>{d.dayName}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Active Day Meal Breakdown Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Breakfast */}
+          <div className="bg-white p-5 rounded-2xl border border-stone-200 flex flex-col justify-between shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between text-xs text-stone-500 font-semibold uppercase tracking-wider mb-2">
+                <span className="text-emerald-800">Breakfast</span>
+                <span className="font-mono tabular-nums">{currentDay.breakfast.calories} kcal</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900 leading-snug">
+                {currentDay.breakfast.title}
+              </h3>
+              <p className="mt-2 text-xs text-stone-600 leading-relaxed">
+                {currentDay.breakfast.description}
+              </p>
+            </div>
+
+            {currentDay.breakfast.recipeId && (
+              <div className="mt-4 pt-3 border-t border-stone-100">
+                <button
+                  onClick={() => navigate('recipe', { slug: currentDay.breakfast.recipeId! })}
+                  className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-1"
+                >
+                  View Full Recipe <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Lunch */}
+          <div className="bg-white p-5 rounded-2xl border border-stone-200 flex flex-col justify-between shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between text-xs text-stone-500 font-semibold uppercase tracking-wider mb-2">
+                <span className="text-emerald-800">Lunch</span>
+                <span className="font-mono tabular-nums">{currentDay.lunch.calories} kcal</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900 leading-snug">
+                {currentDay.lunch.title}
+              </h3>
+              <p className="mt-2 text-xs text-stone-600 leading-relaxed">
+                {currentDay.lunch.description}
+              </p>
+            </div>
+
+            {currentDay.lunch.recipeId && (
+              <div className="mt-4 pt-3 border-t border-stone-100">
+                <button
+                  onClick={() => navigate('recipe', { slug: currentDay.lunch.recipeId! })}
+                  className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-1"
+                >
+                  View Full Recipe <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Dinner */}
+          <div className="bg-white p-5 rounded-2xl border border-stone-200 flex flex-col justify-between shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between text-xs text-stone-500 font-semibold uppercase tracking-wider mb-2">
+                <span className="text-emerald-800">Dinner</span>
+                <span className="font-mono tabular-nums">{currentDay.dinner.calories} kcal</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900 leading-snug">
+                {currentDay.dinner.title}
+              </h3>
+              <p className="mt-2 text-xs text-stone-600 leading-relaxed">
+                {currentDay.dinner.description}
+              </p>
+            </div>
+
+            {currentDay.dinner.recipeId && (
+              <div className="mt-4 pt-3 border-t border-stone-100">
+                <button
+                  onClick={() => navigate('recipe', { slug: currentDay.dinner.recipeId! })}
+                  className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-1"
+                >
+                  View Full Recipe <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Snacks Strip */}
+        <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-stone-800 font-semibold uppercase tracking-wider">
+            <Utensils className="w-4 h-4 text-emerald-800" />
+            <span>Recommended Snacks:</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 text-stone-700">
+            {currentDay.snacks.map((snack, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 font-medium">
+                <span>{snack.title}</span>
+                <span className="font-mono text-stone-400 tabular-nums">({snack.calories} kcal)</span>
+                {idx < currentDay.snacks.length - 1 && <span className="text-stone-300">·</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categorized Grocery Shopping List with Interactive Checking */}
+      <section className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
+          <div>
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-emerald-800" />
+              <h2 className="font-serif text-2xl font-semibold text-stone-900">
+                Complete Weekly Grocery List
+              </h2>
+            </div>
+            <p className="text-xs text-stone-500 mt-1">
+              Organized by supermarket aisle. Check off items as you shop.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyShoppingList}
+              className="px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copy List</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {plan.shoppingList.map((category) => (
+            <div key={category.category} className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-900 pb-1 border-b border-stone-200">
+                {category.category}
+              </h3>
+              <ul className="space-y-2">
+                {category.items.map((item, idx) => {
+                  const key = `${category.category}-${idx}`;
+                  const isChecked = !!checkedItems[key];
+                  return (
+                    <li
+                      key={idx}
+                      onClick={() => toggleItemCheck(key)}
+                      className={`text-xs flex items-start gap-2.5 cursor-pointer p-1 rounded transition-colors ${
+                        isChecked ? 'text-stone-400 line-through' : 'text-stone-800 hover:text-stone-950'
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded mt-0.5 flex items-center justify-center shrink-0 border ${
+                          isChecked
+                            ? 'bg-emerald-700 border-emerald-700 text-white'
+                            : 'border-stone-300 bg-white'
+                        }`}
+                      >
+                        {isChecked && <Check className="w-3 h-3" />}
+                      </div>
+                      <span className="leading-snug">{item}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
