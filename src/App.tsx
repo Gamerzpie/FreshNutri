@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SearchModal } from './components/SearchModal';
 import { NewsletterModal } from './components/NewsletterModal';
+import { OrganizeCollectionModal } from './components/OrganizeCollectionModal';
 import { ToastContainer } from './components/ToastContainer';
 
 // Views
@@ -26,7 +27,7 @@ import { AdminView } from './views/AdminView';
 import { HealthConditionsDietView } from './views/HealthConditionsDietView';
 
 const MainContent: React.FC = () => {
-  const { currentRoute } = useApp();
+  const { currentRoute, organizeRecipeModalId, closeOrganizeModal } = useApp();
 
   const renderCurrentView = () => {
     switch (currentRoute) {
@@ -80,6 +81,12 @@ const MainContent: React.FC = () => {
       <Footer />
       <SearchModal />
       <NewsletterModal />
+      {organizeRecipeModalId && (
+        <OrganizeCollectionModal
+          recipeId={organizeRecipeModalId}
+          onClose={closeOrganizeModal}
+        />
+      )}
       <ToastContainer />
     </div>
   );

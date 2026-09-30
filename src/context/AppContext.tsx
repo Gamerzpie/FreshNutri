@@ -20,10 +20,19 @@ interface AppContextType {
   collections: SavedCollection[];
   isRecipeSaved: (recipeId: string) => boolean;
   toggleSaveRecipe: (recipeId: string) => void;
-  createCollection: (name: string, description?: string) => void;
+  createCollection: (name: string, description?: string) => string;
+  renameCollection: (collectionId: string, newName: string, newDescription?: string) => void;
   addRecipeToCollection: (collectionId: string, recipeId: string) => void;
   removeRecipeFromCollection: (collectionId: string, recipeId: string) => void;
+  toggleRecipeInCollection: (collectionId: string, recipeId: string) => void;
+  isRecipeInCollection: (collectionId: string, recipeId: string) => boolean;
+  getCollectionsForRecipe: (recipeId: string) => SavedCollection[];
   deleteCollection: (collectionId: string) => void;
+
+  // Organize Recipe Modal
+  organizeRecipeModalId: string | null;
+  openOrganizeModal: (recipeId: string) => void;
+  closeOrganizeModal: () => void;
 
   // Search Modal
   isSearchOpen: boolean;
@@ -127,6 +136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
+  const [organizeRecipeModalId, setOrganizeRecipeModalId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Sync saved items to local storage
@@ -242,9 +252,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const createCollection = (name: string, description?: string) => {
+  const createCollection = (name: string, description?: string): string => {
+    const newId = `col-${Date.now()}`;
     const newCol: SavedCollection = {
-      id: `col-${Date.now()}`,
+      id: newId,
       name,
       description,
       recipeIds: [],
@@ -252,6 +263,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCollections((prev) => [...prev, newCol]);
     showToast(`Created new collection "${name}"`, 'success');
+    return newId;
+  };
+
+  const renameCollection = (collectionId: string, newName: string, newDescription?: string) => {
+    setCollections((prev) =>
+      prev.map((c) =>
+        c.id === collectionId
+          ? { ...c, name: newName, description: newDescription !== undefined ? newDescription : c.description }
+          : c
+      )
+    );
+    showToast(`Updated collection "${newName}"`, 'success');
   };
 
   const addRecipeToCollection = (collectionId: string, recipeId: string) => {
@@ -267,7 +290,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!savedRecipeIds.includes(recipeId)) {
       setSavedRecipeIds((prev) => [...prev, recipeId]);
     }
-    showToast('Added recipe to collection', 'success');
+    const colName = collections.find((c) => c.id === collectionId)?.name || 'collection';
+    showToast(`Saved to "${colName}"`, 'success');
   };
 
   const removeRecipeFromCollection = (collectionId: string, recipeId: string) => {
@@ -279,13 +303,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return c;
       })
     );
-    showToast('Removed recipe from collection', 'info');
+    const colName = collections.find((c) => c.id === collectionId)?.name || 'collection';
+    showToast(`Removed from "${colName}"`, 'info');
+  };
+
+  const toggleRecipeInCollection = (collectionId: string, recipeId: string) => {
+    const col = collections.find((c) => c.id === collectionId);
+    if (!col) return;
+    if (col.recipeIds.includes(recipeId)) {
+      removeRecipeFromCollection(collectionId, recipeId);
+    } else {
+      addRecipeToCollection(collectionId, recipeId);
+    }
+  };
+
+  const isRecipeInCollection = (collectionId: string, recipeId: string): boolean => {
+    const col = collections.find((c) => c.id === collectionId);
+    return Boolean(col && col.recipeIds.includes(recipeId));
+  };
+
+  const getCollectionsForRecipe = (recipeId: string): SavedCollection[] => {
+    return collections.filter((c) => c.recipeIds.includes(recipeId));
   };
 
   const deleteCollection = (collectionId: string) => {
     setCollections((prev) => prev.filter((c) => c.id !== collectionId));
     showToast('Collection deleted', 'info');
   };
+
+  const openOrganizeModal = (recipeId: string) => setOrganizeRecipeModalId(recipeId);
+  const closeOrganizeModal = () => setOrganizeRecipeModalId(null);
 
   const openSearch = () => setIsSearchOpen(true);
   const closeSearch = () => setIsSearchOpen(false);
@@ -343,9 +390,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isRecipeSaved,
         toggleSaveRecipe,
         createCollection,
+        renameCollection,
         addRecipeToCollection,
         removeRecipeFromCollection,
+        toggleRecipeInCollection,
+        isRecipeInCollection,
+        getCollectionsForRecipe,
         deleteCollection,
+        organizeRecipeModalId,
+        openOrganizeModal,
+        closeOrganizeModal,
         isSearchOpen,
         openSearch,
         closeSearch,

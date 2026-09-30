@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Recipe } from '../types';
 import { useApp } from '../context/AppContext';
-import { Clock, Star, Bookmark, ChefHat, ArrowUpRight } from 'lucide-react';
+import { Clock, Star, Bookmark, ChefHat, ArrowUpRight, FolderPlus } from 'lucide-react';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -9,7 +9,7 @@ interface RecipeCardProps {
 }
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, layout = 'standard' }) => {
-  const { navigate, isRecipeSaved, toggleSaveRecipe } = useApp();
+  const { navigate, isRecipeSaved, toggleSaveRecipe, openOrganizeModal } = useApp();
   const saved = isRecipeSaved(recipe.id);
   const [imgError, setImgError] = useState(false);
 
@@ -76,7 +76,21 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, layout = 'standa
               <span className="text-stone-400">({recipe.reviewsCount})</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {saved && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openOrganizeModal(recipe.id);
+                  }}
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-emerald-700 hover:bg-stone-100 transition-colors"
+                  title="Organize into collections"
+                  aria-label="Organize into collections"
+                >
+                  <FolderPlus className="w-4 h-4 text-emerald-700" />
+                </button>
+              )}
+
               <button
                 onClick={handleSaveClick}
                 className={`p-1.5 rounded-lg transition-colors ${
@@ -122,19 +136,37 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, layout = 'standa
           </div>
         )}
 
-        {/* Save Bookmark Button */}
-        <button
-          onClick={handleSaveClick}
-          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md shadow-sm transition-all ${
-            saved
-              ? 'bg-emerald-800 text-white'
-              : 'bg-white/90 text-stone-700 hover:bg-white hover:text-stone-900'
-          }`}
-          title={saved ? 'Remove from saved' : 'Save recipe'}
-          aria-label="Save recipe"
-        >
-          <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
-        </button>
+        {/* Save Bookmark & Organize Buttons */}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+          {saved && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openOrganizeModal(recipe.id);
+              }}
+              className="p-2 rounded-full backdrop-blur-md shadow-sm bg-white/90 text-stone-700 hover:bg-white hover:text-emerald-800 transition-all"
+              title="Organize into collections"
+              aria-label="Organize into collections"
+            >
+              <FolderPlus className="w-4 h-4 text-emerald-700" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className={`p-2 rounded-full backdrop-blur-md shadow-sm transition-all ${
+              saved
+                ? 'bg-emerald-800 text-white'
+                : 'bg-white/90 text-stone-700 hover:bg-white hover:text-stone-900'
+            }`}
+            title={saved ? 'Remove from saved' : 'Save recipe'}
+            aria-label="Save recipe"
+          >
+            <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
+          </button>
+        </div>
 
         {recipe.quickAndEasy && (
           <div className="absolute bottom-3 left-3 bg-stone-900/80 backdrop-blur-sm text-stone-100 text-[11px] font-medium px-2.5 py-0.5 rounded-md">

@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { allRecipes, getRecipeById } from '../data/recipes';
 import { authors } from '../data/authors';
 import { RecipeCard } from '../components/RecipeCard';
+import { InteractiveNutritionCalculator } from '../components/InteractiveNutritionCalculator';
 import {
   Clock,
   Star,
@@ -16,10 +17,11 @@ import {
   Heart,
   ArrowLeft,
   ShieldAlert,
+  FolderPlus,
 } from 'lucide-react';
 
 export const RecipeDetailView: React.FC = () => {
-  const { routeParams, goBack, isRecipeSaved, toggleSaveRecipe, showToast } = useApp();
+  const { routeParams, goBack, isRecipeSaved, toggleSaveRecipe, openOrganizeModal, showToast } = useApp();
   const recipeSlug = routeParams.slug || routeParams.id;
   const recipe = getRecipeById(recipeSlug) || allRecipes[0];
   const author = authors.find((a) => a.id === recipe.authorId);
@@ -158,7 +160,7 @@ export const RecipeDetailView: React.FC = () => {
               <span className="text-stone-500">({recipe.reviewsCount} reviews)</span>
             </div>
 
-            {/* Action Bar (Save, Share, Print) */}
+            {/* Action Bar (Save, Organize, Share, Print) */}
             <div className="no-print flex items-center gap-1.5">
               <button
                 onClick={() => toggleSaveRecipe(recipe.id)}
@@ -171,6 +173,15 @@ export const RecipeDetailView: React.FC = () => {
                 aria-label="Bookmark Recipe"
               >
                 <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
+              </button>
+
+              <button
+                onClick={() => openOrganizeModal(recipe.id)}
+                className="px-3 py-2 bg-white border border-stone-200 hover:border-emerald-700 text-stone-700 hover:text-emerald-900 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold"
+                title="Organize into Custom Collections"
+              >
+                <FolderPlus className="w-3.5 h-3.5 text-emerald-700" />
+                <span className="hidden sm:inline">Add to Collection</span>
               </button>
 
               <button
@@ -342,85 +353,22 @@ export const RecipeDetailView: React.FC = () => {
         </ol>
       </section>
 
-      {/* Comprehensive Nutrition Panel & Medical Disclaimer */}
-      <section className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 space-y-5">
-        <div className="pb-4 border-b border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h2 className="font-serif text-2xl font-semibold text-stone-900">
-              Nutrition Information
-            </h2>
-            <span className="text-xs text-stone-500">
-              Per single serving (recipe yields {baseServings} portions)
-            </span>
-          </div>
+      {/* Interactive Nutrition Calculator Component */}
+      <InteractiveNutritionCalculator
+        nutrition={recipe.nutrition}
+        baseServings={baseServings}
+        currentServings={servings}
+        onServingsChange={setServings}
+        recipeTitle={recipe.title}
+      />
 
-          <div className="text-xs text-stone-400 font-mono">
-            Analyzed via USDA FoodData Central
-          </div>
-        </div>
-
-        {/* Nutritional Data Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
-          <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-            <span className="text-stone-500 block">Calories</span>
-            <span className="font-mono text-lg font-bold text-stone-900 tabular-nums">
-              {recipe.nutrition.calories} kcal
-            </span>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-            <span className="text-stone-500 block">Protein</span>
-            <span className="font-mono text-lg font-bold text-emerald-800 tabular-nums">
-              {recipe.nutrition.protein}g
-            </span>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-            <span className="text-stone-500 block">Carbohydrates</span>
-            <span className="font-mono text-lg font-bold text-stone-900 tabular-nums">
-              {recipe.nutrition.carbohydrates}g
-            </span>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-            <span className="text-stone-500 block">Dietary Fiber</span>
-            <span className="font-mono text-lg font-bold text-emerald-800 tabular-nums">
-              {recipe.nutrition.fiber}g
-            </span>
-          </div>
-          <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-            <span className="text-stone-500 block">Total Fat</span>
-            <span className="font-mono text-lg font-bold text-stone-900 tabular-nums">
-              {recipe.nutrition.fat}g
-            </span>
-          </div>
-        </div>
-
-        {/* Secondary Micronutrient Definition List */}
-        <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-stone-600 border-t border-stone-100">
-          <div>
-            <span className="text-stone-400 block">Saturated Fat:</span>
-            <span className="font-mono font-medium text-stone-800 tabular-nums">{recipe.nutrition.saturatedFat}g</span>
-          </div>
-          <div>
-            <span className="text-stone-400 block">Total Sugars:</span>
-            <span className="font-mono font-medium text-stone-800 tabular-nums">{recipe.nutrition.sugar}g</span>
-          </div>
-          <div>
-            <span className="text-stone-400 block">Sodium:</span>
-            <span className="font-mono font-medium text-stone-800 tabular-nums">{recipe.nutrition.sodium}mg</span>
-          </div>
-          <div>
-            <span className="text-stone-400 block">Potassium:</span>
-            <span className="font-mono font-medium text-stone-800 tabular-nums">{recipe.nutrition.potassium}mg</span>
-          </div>
-        </div>
-
-        {/* Prominent Medical Disclaimer */}
-        <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-start gap-3 text-xs text-stone-600">
-          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
-            <strong className="font-semibold text-stone-800">Nutritional Disclaimer:</strong> Calculated values are informational estimates based on standard recipe testing and ingredient variations. FreshNutri does not diagnose, treat, or offer clinical medical advice. Consult your doctor or certified registered dietitian regarding specialized medical dietary needs.
-          </p>
-        </div>
-      </section>
+      {/* Prominent Medical Disclaimer */}
+      <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-start gap-3 text-xs text-stone-600">
+        <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          <strong className="font-semibold text-stone-800">Nutritional Disclaimer:</strong> Calculated values are informational estimates based on standard USDA FoodData testing and ingredient variations. FreshNutri does not diagnose, treat, or offer clinical medical advice. Consult your doctor or certified registered dietitian regarding specialized medical dietary needs.
+        </p>
+      </div>
 
       {/* Recipe Notes, Substitutions & Storage */}
       {(recipe.recipeNotes || recipe.substitutions || recipe.storageInfo) && (
