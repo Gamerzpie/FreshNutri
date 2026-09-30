@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { recipeCategories, nutritionCategories, lifestyleCategories } from '../data/categories';
 import { allRecipes } from '../data/recipes';
@@ -16,6 +16,14 @@ export const CategoryPageView: React.FC = () => {
     const all = [...recipeCategories, ...nutritionCategories, ...lifestyleCategories];
     return all.find((c) => c.slug === slug || c.id === slug) || recipeCategories[0];
   }, [slug]);
+
+  // Sync title and scroll to top
+  useEffect(() => {
+    if (category) {
+      document.title = `${category.name} | FreshNutri Category Archive`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [category?.id]);
 
   // Matching recipes
   const matchingRecipes = useMemo(() => {
@@ -65,12 +73,16 @@ export const CategoryPageView: React.FC = () => {
           <span>Back</span>
         </button>
 
-        <div className="flex items-center gap-1 text-[11px]">
-          <span>Categories</span>
+        <div className="flex items-center gap-1.5 text-xs text-stone-500">
+          <button onClick={() => navigate('home')} className="hover:text-stone-900 transition-colors">
+            Home
+          </button>
           <span>/</span>
-          <span className="text-emerald-800 font-medium capitalize">{category.type}</span>
+          <button onClick={() => navigate(category.type === 'recipe' ? 'recipes' : 'articles')} className="hover:text-stone-900 transition-colors font-medium">
+            {category.type === 'recipe' ? 'Recipes' : 'Articles'}
+          </button>
           <span>/</span>
-          <span className="text-stone-800">{category.name}</span>
+          <span className="text-emerald-800 font-semibold">{category.name}</span>
         </div>
       </div>
 

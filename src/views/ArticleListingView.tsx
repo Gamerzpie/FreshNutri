@@ -1,16 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allArticles } from '../data/articles';
 import { ArticleCard } from '../components/ArticleCard';
 import { ArticleCategory } from '../types';
-import { Search, BookOpen } from 'lucide-react';
+import { Search, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const ArticleListingView: React.FC = () => {
-  const { routeParams } = useApp();
+  const { routeParams, customArticles } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>(
     routeParams.sub || 'all'
   );
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 9;
+
+  // Set document title
+  useEffect(() => {
+    document.title = 'Editorial Articles & Guides | FreshNutri Magazine';
+  }, []);
+
+  // Combine standard and custom articles
+  const allAvailableArticles = useMemo(() => {
+    return [...allArticles, ...customArticles];
+  }, [customArticles]);
 
   const categories: ArticleCategory[] = [
     'Nutrition',
@@ -26,8 +38,13 @@ export const ArticleListingView: React.FC = () => {
     'Expert Advice',
   ];
 
+  // Reset to page 1 on filter or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, search]);
+
   const filteredArticles = useMemo(() => {
-    return allArticles.filter((art) => {
+    return allAvailableArticles.filter((art) => {
       if (
         selectedCategory !== 'all' &&
         art.category.toLowerCase() !== selectedCategory.toLowerCase()
@@ -44,10 +61,21 @@ export const ArticleListingView: React.FC = () => {
       }
       return true;
     });
-  }, [selectedCategory, search]);
+  }, [allAvailableArticles, selectedCategory, search]);
 
-  const leadArticle = filteredArticles[0];
-  const secondaryArticles = filteredArticles.slice(1);
+  const totalPages = Math.max(1, Math.ceil(filteredArticles.length / itemsPerPage));
+  const paginatedArticles = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredArticles.slice(start, start + itemsPerPage);
+  }, [filteredArticles, currentPage, itemsPerPage]);
+
+  const handlePageChange = (pg: number) => {
+    setCurrentPage(pg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const leadArticle = currentPage === 1 ? paginatedArticles[0] : null;
+  const secondaryArticles = currentPage === 1 ? paginatedArticles.slice(1) : paginatedArticles;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
@@ -78,7 +106,7 @@ export const ArticleListingView: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filter Pills (Functional interactive buttons) */}
+      {/* Category Filter Pills */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
         <button
           onClick={() => setSelectedCategory('all')}
@@ -88,7 +116,7 @@ export const ArticleListingView: React.FC = () => {
               : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
           }`}
         >
-          All Topics ({allArticles.length})
+          All Topics ({allAvailableArticles.length})
         </button>
         {categories.map((cat) => (
           <button
@@ -105,7 +133,7 @@ export const ArticleListingView: React.FC = () => {
         ))}
       </div>
 
-      {/* Lead Article Feature */}
+      {/* Lead Article Feature (Page 1 only) */}
       {leadArticle && (
         <section>
           <ArticleCard article={leadArticle} variant="lead" />
@@ -115,14 +143,64 @@ export const ArticleListingView: React.FC = () => {
       {/* Remaining Articles Grid */}
       {secondaryArticles.length > 0 ? (
         <section className="space-y-6">
-          <h2 className="font-serif text-2xl font-semibold text-stone-900 border-b border-stone-200 pb-2">
-            More Editorial Articles
-          </h2>
+          <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+            <h2 className="font-serif text-2xl font-semibold text-stone-900">
+              {currentPage === 1 ? 'More Editorial Articles' : `Articles (Page ${currentPage} of ${totalPages})`}
+            </h2>
+            <span className="text-xs text-stone-500 font-mono">
+              Showing {(currentPage - 1) * itemsPerPage + 1}–
+              {Math.min(currentPage * itemsPerPage, filteredArticles.length)} of {filteredArticles.length}
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {secondaryArticles.map((art) => (
               <ArticleCard key={art.id} article={art} />
             ))}
           </div>
+
+          {/* Numbered Pagination Bar */}
+          {totalPages > 1 && (
+            <div className="pt-4 flex items-center justify-between border-t border-stone-200">
+              <span className="text-xs text-stone-500 font-mono">
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-1.5 rounded-lg border border-stone-300 text-xs font-semibold flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-stone-100 text-stone-700"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Prev</span>
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                  <button
+                    key={pg}
+                    onClick={() => handlePageChange(pg)}
+                    className={`w-8 h-8 rounded-lg text-xs font-mono font-semibold transition-all ${
+                      pg === currentPage
+                        ? 'bg-stone-900 text-white'
+                        : 'bg-white border border-stone-200 hover:bg-stone-100 text-stone-700'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-stone-300 text-xs font-semibold flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-stone-100 text-stone-700"
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       ) : (
         !leadArticle && (

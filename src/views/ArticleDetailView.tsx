@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allArticles, getArticleById } from '../data/articles';
 import { authors } from '../data/authors';
@@ -8,6 +8,9 @@ import { ArticleCard } from '../components/ArticleCard';
 import {
   Clock,
   ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Share2,
   Bookmark,
   Calendar,
@@ -17,20 +20,45 @@ import {
 } from 'lucide-react';
 
 export const ArticleDetailView: React.FC = () => {
-  const { routeParams, goBack, navigate, showToast, openNewsletter } = useApp();
+  const { routeParams, goBack, navigate, customArticles, showToast, openNewsletter } = useApp();
   const articleSlug = routeParams.slug || routeParams.id;
-  const article = getArticleById(articleSlug) || allArticles[0];
+
+  const allAvailableArticles = useMemo(() => {
+    return [...allArticles, ...customArticles];
+  }, [customArticles]);
+
+  const article = useMemo(() => {
+    return allAvailableArticles.find((a) => a.slug === articleSlug || a.id === articleSlug) || allArticles[0];
+  }, [allAvailableArticles, articleSlug]);
+
+  const articleIndex = useMemo(() => {
+    return allAvailableArticles.findIndex((a) => a.id === article.id);
+  }, [allAvailableArticles, article.id]);
+
+  const prevArticle = articleIndex > 0 ? allAvailableArticles[articleIndex - 1] : allAvailableArticles[allAvailableArticles.length - 1];
+  const nextArticle = articleIndex < allAvailableArticles.length - 1 ? allAvailableArticles[articleIndex + 1] : allAvailableArticles[0];
+
   const author = authors.find((a) => a.id === article.authorId);
+
+  // Sync document title and scroll to top on article change
+  useEffect(() => {
+    if (article) {
+      document.title = `${article.title} | FreshNutri Magazine`;
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.setAttribute('content', article.subtitle);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [article?.id]);
 
   const relatedRecipes = useMemo(() => {
     return allRecipes.filter((r) => article.relatedRecipeIds.includes(r.id)).slice(0, 2);
   }, [article]);
 
   const relatedArticles = useMemo(() => {
-    return allArticles
+    return allAvailableArticles
       .filter((a) => a.id !== article.id && (article.relatedArticleIds.includes(a.id) || a.category === article.category))
       .slice(0, 3);
-  }, [article]);
+  }, [allAvailableArticles, article]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -49,20 +77,57 @@ export const ArticleDetailView: React.FC = () => {
 
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Navigation Breadcrumb */}
-      <div className="flex items-center justify-between text-xs text-stone-500">
-        <button
-          onClick={goBack}
-          className="flex items-center gap-1.5 text-stone-600 hover:text-stone-900 transition-colors font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to previous page</span>
-        </button>
-
-        <div className="flex items-center gap-1 text-[11px]">
-          <span>Articles</span>
+      {/* Navigation Breadcrumb Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-500 border-b border-stone-200/80 pb-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => navigate('home')}
+            className="hover:text-stone-900 transition-colors"
+          >
+            Home
+          </button>
           <span>/</span>
-          <span className="text-emerald-800 font-medium">{article.category}</span>
+          <button
+            onClick={() => navigate('articles')}
+            className="hover:text-stone-900 transition-colors font-semibold text-stone-700"
+          >
+            Articles
+          </button>
+          <span>/</span>
+          <button
+            onClick={() => navigate('articles', { sub: article.category })}
+            className="text-emerald-800 hover:text-emerald-950 font-medium transition-colors"
+          >
+            {article.category}
+          </button>
+          <span>/</span>
+          <span className="truncate max-w-[200px] text-stone-900 font-semibold" title={article.title}>
+            {article.title}
+          </span>
+        </div>
+
+        {/* Page counter & direct pager */}
+        <div className="flex items-center gap-2 self-end sm:self-auto font-mono text-[11px]">
+          <span className="text-stone-400">
+            Article <strong className="text-stone-800">{articleIndex >= 0 ? articleIndex + 1 : 1}</strong> of {allAvailableArticles.length}
+          </span>
+          <span className="text-stone-300">·</span>
+          <button
+            onClick={() => navigate('article', { slug: prevArticle.slug })}
+            className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-md text-stone-700 transition-colors flex items-center gap-1"
+            title={`Previous article: ${prevArticle.title}`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Prev</span>
+          </button>
+          <button
+            onClick={() => navigate('article', { slug: nextArticle.slug })}
+            className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-md text-stone-700 transition-colors flex items-center gap-1"
+            title={`Next article: ${nextArticle.title}`}
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -89,32 +154,33 @@ export const ArticleDetailView: React.FC = () => {
               <img
                 src={author.avatar}
                 alt={author.name}
-                className="w-11 h-11 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover border border-stone-200"
               />
             )}
             <div>
-              <span className="block font-semibold text-stone-900">
-                By {author?.name || 'FreshNutri Editors'}
-              </span>
-              <span className="block text-[11px] text-stone-500">
-                {author?.role} · {author?.credentials}
-              </span>
+              {author ? (
+                <button
+                  onClick={() => navigate('author', { id: author.id })}
+                  className="font-medium text-stone-900 hover:text-emerald-800 transition-colors block text-left"
+                >
+                  By {author.name}
+                </button>
+              ) : (
+                <span className="font-medium text-stone-900">FreshNutri Culinary Lab</span>
+              )}
+              <div className="flex items-center gap-2 text-[11px] text-stone-400 font-mono">
+                <span>{author?.role}</span>
+                <span>·</span>
+                <span>Published {article.publishedAt}</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-stone-500">
-            <div className="text-right text-[11px]">
-              <span className="block">Published {article.publishedAt}</span>
-              {article.updatedAt && (
-                <span className="text-stone-400 block">Updated {article.updatedAt}</span>
-              )}
-            </div>
-
+          <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition-colors"
+              className="p-2 border border-stone-200 text-stone-600 hover:bg-stone-50 rounded-lg transition-colors"
               title="Share article"
-              aria-label="Share article"
             >
               <Share2 className="w-4 h-4" />
             </button>
@@ -122,8 +188,8 @@ export const ArticleDetailView: React.FC = () => {
         </div>
       </header>
 
-      {/* Hero Photography */}
-      <div className="relative aspect-16/10 rounded-2xl overflow-hidden shadow-md bg-stone-100 border border-stone-200">
+      {/* Hero Image */}
+      <div className="aspect-16/10 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200">
         <img
           src={article.heroImage}
           alt={article.title}
@@ -131,95 +197,93 @@ export const ArticleDetailView: React.FC = () => {
         />
       </div>
 
-      {/* Article Body Content (Typography & Reading Experience) */}
-      <section className="font-sans text-stone-800 space-y-6 leading-relaxed text-base sm:text-lg">
-        {article.content.map((block, idx) => {
+      {/* Article Content Body */}
+      <div className="prose prose-stone max-w-none text-stone-800 text-sm sm:text-base leading-relaxed space-y-6">
+        {article.content.map((block, index) => {
           if (block.type === 'heading') {
             return (
               <h2
-                key={idx}
-                className="font-serif text-2xl sm:text-3xl font-semibold text-stone-900 pt-4 pb-1"
+                key={index}
+                className="font-serif text-2xl sm:text-3xl font-semibold text-stone-900 pt-6 pb-2 border-b border-stone-100"
               >
-                {block.headingText}
+                {block.headingText || block.text}
               </h2>
             );
           }
-
+          if (block.type === 'quote') {
+            return (
+              <blockquote
+                key={index}
+                className="border-l-4 border-emerald-700 pl-4 py-2 italic text-stone-700 bg-stone-50 rounded-r-lg my-4 space-y-1"
+              >
+                <p>{block.text}</p>
+                {block.cite && (
+                  <cite className="block text-xs text-stone-500 not-italic font-mono">
+                    — {block.cite}
+                  </cite>
+                )}
+              </blockquote>
+            );
+          }
           if (block.type === 'callout') {
             return (
               <div
-                key={idx}
-                className="my-6 p-5 bg-emerald-50/70 border-l-4 border-emerald-700 rounded-r-xl text-stone-800 text-sm leading-relaxed"
+                key={index}
+                className="p-5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-stone-800 my-4"
               >
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-900 mb-1">
-                  <CheckCircle className="w-4 h-4 text-emerald-700" />
-                  Key Clinical Takeaway
-                </div>
-                {block.text}
+                {block.headingText && (
+                  <h4 className="font-serif font-bold text-emerald-950 mb-1">
+                    {block.headingText}
+                  </h4>
+                )}
+                <p className="text-sm leading-relaxed">{block.text}</p>
               </div>
             );
           }
-
-          if (block.type === 'quote') {
-            return (
-              <figure
-                key={idx}
-                className="my-8 py-6 px-6 bg-stone-50 border-y border-stone-200 text-center"
-              >
-                <blockquote className="font-serif italic text-xl sm:text-2xl text-stone-900 leading-snug">
-                  “{block.text}”
-                </blockquote>
-                {block.cite && (
-                  <figcaption className="mt-3 text-xs uppercase tracking-wider text-stone-500 font-sans font-semibold">
-                    — {block.cite}
-                  </figcaption>
-                )}
-              </figure>
-            );
-          }
-
           if (block.type === 'list' && block.items) {
             return (
-              <ul key={idx} className="my-4 space-y-2.5 list-disc list-inside text-sm sm:text-base text-stone-700 pl-2">
+              <ul key={index} className="list-disc list-inside space-y-1.5 text-stone-700 my-3">
                 {block.items.map((item, i) => (
-                  <li key={i} className="leading-relaxed">
-                    {item}
-                  </li>
+                  <li key={i}>{item}</li>
                 ))}
               </ul>
             );
           }
-
-          // Paragraph with elegant drop cap on the very first paragraph
           return (
-            <p
-              key={idx}
-              className={`leading-relaxed text-stone-700 ${
-                idx === 0
-                  ? 'first-letter:text-5xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-stone-900'
-                  : ''
-              }`}
-            >
+            <p key={index} className="leading-relaxed">
               {block.text}
             </p>
           );
         })}
-      </section>
+      </div>
 
-      {/* Inline Related Recipes */}
-      {relatedRecipes.length > 0 && (
-        <section className="my-10 p-6 bg-stone-50 rounded-2xl border border-stone-200">
-          <div className="mb-4">
-            <span className="text-xs uppercase tracking-wider text-emerald-800 font-semibold block mb-0.5">
-              From the Test Kitchen
+      {/* Tags */}
+      {article.tags.length > 0 && (
+        <div className="pt-6 border-t border-stone-200 flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-stone-400 font-mono">Article Tags:</span>
+          {article.tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-2.5 py-1 bg-stone-100 text-stone-700 rounded-md font-mono"
+            >
+              #{tag}
             </span>
-            <h3 className="font-serif text-xl font-semibold text-stone-900">
-              Tested Recipes Mentioned in this Feature
-            </h3>
+          ))}
+        </div>
+      )}
+
+      {/* Related Recipes Callout Box */}
+      {relatedRecipes.length > 0 && (
+        <section className="bg-[#FAF9F5] p-6 rounded-2xl border border-stone-200 space-y-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-700" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-900 font-mono">
+              Complementary Test Kitchen Recipes
+            </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {relatedRecipes.map((r) => (
-              <RecipeCard key={r.id} recipe={r} layout="horizontal" />
+            {relatedRecipes.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} layout="compact" />
             ))}
           </div>
         </section>
@@ -227,15 +291,15 @@ export const ArticleDetailView: React.FC = () => {
 
       {/* Author Bio Box */}
       {author && (
-        <section className="p-6 bg-white rounded-2xl border border-stone-200 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+        <section className="p-6 bg-stone-50 rounded-2xl border border-stone-200 flex items-start gap-4">
           <img
             src={author.avatar}
             alt={author.name}
-            className="w-16 h-16 rounded-full object-cover shrink-0"
+            className="w-14 h-14 rounded-full object-cover border border-stone-200 shrink-0"
           />
-          <div className="space-y-1.5 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-              <span className="font-serif text-lg font-semibold text-stone-900">
+          <div className="space-y-1">
+            <div className="flex items-baseline gap-2">
+              <span className="font-serif text-base font-semibold text-stone-900">
                 {author.name}
               </span>
               <span className="text-xs text-emerald-800 font-medium font-mono">
@@ -257,25 +321,75 @@ export const ArticleDetailView: React.FC = () => {
         </section>
       )}
 
-      {/* Newsletter Signup Inline Box */}
-      <section className="bg-stone-900 text-white rounded-2xl p-6 sm:p-8 text-center space-y-3">
-        <span className="font-serif text-2xl font-medium block">
-          Never Miss an Evidence-Based Guide
-        </span>
-        <p className="text-xs text-stone-300 max-w-md mx-auto leading-relaxed">
-          Subscribe to the FreshNutri Weekly Digest for weekly meal plans and research breakdowns.
-        </p>
-        <button
-          onClick={openNewsletter}
-          className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors inline-block"
-        >
-          Subscribe Free
-        </button>
+      {/* Article Navigation Bar: Previous & Next Article Pages */}
+      <section className="pt-8 border-t-2 border-stone-200 space-y-4">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-mono uppercase tracking-wider text-stone-500 font-semibold">
+            Editorial Reading · Article {articleIndex >= 0 ? articleIndex + 1 : 1} of {allAvailableArticles.length}
+          </span>
+          <button
+            onClick={() => navigate('articles')}
+            className="text-emerald-800 hover:text-emerald-950 font-semibold flex items-center gap-1 transition-colors"
+          >
+            <span>All Articles</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Previous Article Card */}
+          <div
+            onClick={() => navigate('article', { slug: prevArticle.slug })}
+            className="group cursor-pointer p-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200 transition-all hover:border-emerald-700 flex items-center gap-4"
+          >
+            <img
+              src={prevArticle.heroImage}
+              alt=""
+              className="w-16 h-16 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5 flex items-center gap-1">
+                <ChevronLeft className="w-3 h-3 text-emerald-700" />
+                <span>Previous Article</span>
+              </span>
+              <h4 className="font-serif text-sm font-semibold text-stone-900 group-hover:text-emerald-900 transition-colors line-clamp-1">
+                {prevArticle.title}
+              </h4>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {prevArticle.category} · {prevArticle.readTime}
+              </span>
+            </div>
+          </div>
+
+          {/* Next Article Card */}
+          <div
+            onClick={() => navigate('article', { slug: nextArticle.slug })}
+            className="group cursor-pointer p-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200 transition-all hover:border-emerald-700 flex items-center gap-4 text-right sm:flex-row-reverse"
+          >
+            <img
+              src={nextArticle.heroImage}
+              alt=""
+              className="w-16 h-16 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5 flex items-center justify-end gap-1">
+                <span>Next Article</span>
+                <ChevronRight className="w-3 h-3 text-emerald-700" />
+              </span>
+              <h4 className="font-serif text-sm font-semibold text-stone-900 group-hover:text-emerald-900 transition-colors line-clamp-1">
+                {nextArticle.title}
+              </h4>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {nextArticle.category} · {nextArticle.readTime}
+              </span>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Related Articles */}
       {relatedArticles.length > 0 && (
-        <section className="pt-8 border-t border-stone-200 space-y-6">
+        <section className="pt-6 border-t border-stone-200 space-y-6">
           <h2 className="font-serif text-2xl font-semibold text-stone-900">
             More Related Coverage
           </h2>

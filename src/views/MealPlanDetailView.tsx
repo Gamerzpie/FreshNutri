@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { allMealPlans, getMealPlanById } from '../data/mealPlans';
 import { authors } from '../data/authors';
@@ -11,6 +11,8 @@ import {
   Copy,
   ArrowLeft,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   ShoppingCart,
   ListOrdered,
   Utensils,
@@ -21,6 +23,23 @@ export const MealPlanDetailView: React.FC = () => {
   const slug = routeParams.slug || routeParams.id;
   const plan = getMealPlanById(slug) || allMealPlans[0];
   const author = authors.find((a) => a.id === plan.authorId);
+
+  // Sync title and scroll to top
+  useEffect(() => {
+    if (plan) {
+      document.title = `${plan.title} (7-Day Protocol) | FreshNutri Meal Plans`;
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.setAttribute('content', plan.description);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [plan?.id]);
+
+  const planIndex = useMemo(() => {
+    return allMealPlans.findIndex((p) => p.id === plan.id);
+  }, [plan.id]);
+
+  const prevPlan = planIndex > 0 ? allMealPlans[planIndex - 1] : allMealPlans[allMealPlans.length - 1];
+  const nextPlan = planIndex < allMealPlans.length - 1 ? allMealPlans[planIndex + 1] : allMealPlans[0];
 
   // Active day tab state (1 to 7)
   const [activeDayNumber, setActiveDayNumber] = useState<number>(1);
@@ -53,20 +72,52 @@ export const MealPlanDetailView: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-      {/* Back button & Breadcrumb */}
-      <div className="no-print flex items-center justify-between text-xs text-stone-500">
-        <button
-          onClick={goBack}
-          className="flex items-center gap-1.5 text-stone-600 hover:text-stone-900 transition-colors font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to meal plans</span>
-        </button>
-
-        <div className="flex items-center gap-1 text-[11px]">
-          <span>Meal Plans</span>
+      {/* Back button & Breadcrumb Bar */}
+      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-500 border-b border-stone-200/80 pb-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => navigate('home')}
+            className="hover:text-stone-900 transition-colors"
+          >
+            Home
+          </button>
+          <span>/</span>
+          <button
+            onClick={() => navigate('meal-plans')}
+            className="hover:text-stone-900 transition-colors font-semibold text-stone-700"
+          >
+            Meal Plans
+          </button>
           <span>/</span>
           <span className="text-emerald-800 font-medium">{plan.dietType}</span>
+          <span>/</span>
+          <span className="truncate max-w-[200px] text-stone-900 font-semibold" title={plan.title}>
+            {plan.title}
+          </span>
+        </div>
+
+        {/* Meal Plan Pager */}
+        <div className="flex items-center gap-2 self-end sm:self-auto font-mono text-[11px]">
+          <span className="text-stone-400">
+            Plan <strong className="text-stone-800">{planIndex >= 0 ? planIndex + 1 : 1}</strong> of {allMealPlans.length}
+          </span>
+          <span className="text-stone-300">·</span>
+          <button
+            onClick={() => navigate('meal-plan', { slug: prevPlan.slug })}
+            className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-md text-stone-700 transition-colors flex items-center gap-1"
+            title={`Previous plan: ${prevPlan.title}`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Prev</span>
+          </button>
+          <button
+            onClick={() => navigate('meal-plan', { slug: nextPlan.slug })}
+            className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-md text-stone-700 transition-colors flex items-center gap-1"
+            title={`Next plan: ${nextPlan.title}`}
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -349,6 +400,72 @@ export const MealPlanDetailView: React.FC = () => {
               </ul>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Dedicated Meal Plan Page Navigator */}
+      <section className="no-print pt-6 border-t-2 border-stone-200 space-y-4">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-mono uppercase tracking-wider text-stone-500 font-semibold">
+            Meal Plan Protocol Navigation · Plan {planIndex >= 0 ? planIndex + 1 : 1} of {allMealPlans.length}
+          </span>
+          <button
+            onClick={() => navigate('meal-plans')}
+            className="text-emerald-800 hover:text-emerald-950 font-semibold flex items-center gap-1 transition-colors"
+          >
+            <span>All Meal Plans</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Previous Plan Card */}
+          <div
+            onClick={() => navigate('meal-plan', { slug: prevPlan.slug })}
+            className="group cursor-pointer p-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200 transition-all hover:border-emerald-700 flex items-center gap-4"
+          >
+            <img
+              src={prevPlan.heroImage}
+              alt=""
+              className="w-16 h-16 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5 flex items-center gap-1">
+                <ChevronLeft className="w-3 h-3 text-emerald-700" />
+                <span>Previous Meal Plan</span>
+              </span>
+              <h4 className="font-serif text-sm font-semibold text-stone-900 group-hover:text-emerald-900 transition-colors line-clamp-1">
+                {prevPlan.title}
+              </h4>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {prevPlan.dietType} · 7-Day Protocol
+              </span>
+            </div>
+          </div>
+
+          {/* Next Plan Card */}
+          <div
+            onClick={() => navigate('meal-plan', { slug: nextPlan.slug })}
+            className="group cursor-pointer p-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200 transition-all hover:border-emerald-700 flex items-center gap-4 text-right sm:flex-row-reverse"
+          >
+            <img
+              src={nextPlan.heroImage}
+              alt=""
+              className="w-16 h-16 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5 flex items-center justify-end gap-1">
+                <span>Next Meal Plan</span>
+                <ChevronRight className="w-3 h-3 text-emerald-700" />
+              </span>
+              <h4 className="font-serif text-sm font-semibold text-stone-900 group-hover:text-emerald-900 transition-colors line-clamp-1">
+                {nextPlan.title}
+              </h4>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {nextPlan.dietType} · 7-Day Protocol
+              </span>
+            </div>
+          </div>
         </div>
       </section>
     </div>

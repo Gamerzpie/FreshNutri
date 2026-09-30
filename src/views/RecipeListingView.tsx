@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allRecipes } from '../data/recipes';
 import { RecipeCard } from '../components/RecipeCard';
@@ -16,10 +16,18 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
 } from 'lucide-react';
 
 export const RecipeListingView: React.FC = () => {
-  const { routeParams } = useApp();
+  const { routeParams, customRecipes } = useApp();
+
+  // Combine standard and custom recipes
+  const allAvailableRecipes = useMemo(() => {
+    return [...allRecipes, ...customRecipes];
+  }, [customRecipes]);
 
   // Filter States
   const [search, setSearch] = useState('');
@@ -35,6 +43,33 @@ export const RecipeListingView: React.FC = () => {
   const [minProtein, setMinProtein] = useState<number>(0);
   const [maxCalories, setMaxCalories] = useState<number>(700);
   const [sortBy, setSortBy] = useState<'rating' | 'newest' | 'quickest' | 'calories'>('rating');
+
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(12);
+
+  // Set document title
+  useEffect(() => {
+    document.title = 'All Recipes Directory | FreshNutri Kitchen';
+  }, []);
+
+  // Reset to Page 1 when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    search,
+    selectedMealType,
+    selectedCuisine,
+    selectedMethod,
+    selectedDifficulty,
+    selectedDiet,
+    selectedSeason,
+    maxTime,
+    minProtein,
+    maxCalories,
+    sortBy,
+    itemsPerPage,
+  ]);
 
   // Mobile filter drawer state
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -148,7 +183,7 @@ export const RecipeListingView: React.FC = () => {
 
   // Filtered & sorted recipe list
   const filteredRecipes = useMemo(() => {
-    let list = allRecipes.filter((r) => {
+    let list = allAvailableRecipes.filter((r) => {
       // Search text
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -237,6 +272,7 @@ export const RecipeListingView: React.FC = () => {
 
     return list;
   }, [
+    allAvailableRecipes,
     search,
     selectedMealType,
     selectedCuisine,
@@ -250,8 +286,28 @@ export const RecipeListingView: React.FC = () => {
     sortBy,
   ]);
 
+  // Pagination Calculations
+  const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / itemsPerPage));
+
+  const paginatedRecipes = useMemo(() => {
+    if (itemsPerPage >= 999) return filteredRecipes;
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredRecipes.slice(start, start + itemsPerPage);
+  }, [filteredRecipes, currentPage, itemsPerPage]);
+
+  const handlePageChange = (newPage: number) => {
+    const pageNum = Math.max(1, Math.min(newPage, totalPages));
+    setCurrentPage(pageNum);
+    const catalogHeader = document.getElementById('recipe-catalog-header');
+    if (catalogHeader) {
+      catalogHeader.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div id="recipe-catalog-header" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner */}
       <div className="border-b border-stone-200 pb-6">
         <span className="text-xs uppercase tracking-wider text-emerald-800 font-semibold block mb-1">
@@ -535,19 +591,141 @@ export const RecipeListingView: React.FC = () => {
             </div>
           )}
 
-          {/* Recipe Count Indicator */}
-          <div className="flex items-center justify-between text-xs text-stone-500 border-b border-stone-200 pb-2">
-            <span>
-              Showing <strong className="text-stone-900 font-mono tabular-nums">{filteredRecipes.length}</strong> recipes
-            </span>
+          {/* Recipe Count & Pagination Header Indicator */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-stone-500 border-b border-stone-200 pb-3">
+            <div>
+              <span>
+                Showing{' '}
+                <strong className="text-stone-900 font-mono tabular-nums">
+                  {filteredRecipes.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}–
+                  {Math.min(currentPage * itemsPerPage, filteredRecipes.length)}
+                </strong>{' '}
+                of{' '}
+                <strong className="text-stone-900 font-mono tabular-nums">
+                  {filteredRecipes.length}
+                </strong>{' '}
+                recipes
+              </span>
+              {totalPages > 1 && (
+                <span className="text-stone-400 font-mono ml-2">
+                  (Page {currentPage} of {totalPages})
+                </span>
+              )}
+            </div>
+
+            {/* Per-Page Selector */}
+            <div className="flex items-center gap-1.5 self-end sm:self-auto font-mono text-[11px]">
+              <span className="text-stone-400">Per page:</span>
+              {[12, 24, 48].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setItemsPerPage(size)}
+                  className={`px-2 py-0.5 rounded-md transition-colors ${
+                    itemsPerPage === size
+                      ? 'bg-stone-900 text-white font-bold'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+              <button
+                onClick={() => setItemsPerPage(9999)}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  itemsPerPage === 9999
+                    ? 'bg-stone-900 text-white font-bold'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                All
+              </button>
+            </div>
           </div>
 
           {/* Recipe Grid */}
           {filteredRecipes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
-              ))}
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedRecipes.map((recipe) => (
+                  <RecipeCard key={recipe.id} recipe={recipe} />
+                ))}
+              </div>
+
+              {/* Numbered Pagination Navigation Bar */}
+              {totalPages > 1 && (
+                <div className="p-4 bg-white rounded-2xl border border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+                  <div className="text-xs text-stone-500 font-mono">
+                    Page <strong className="text-stone-900 font-bold">{currentPage}</strong> of{' '}
+                    <strong className="text-stone-900 font-bold">{totalPages}</strong>
+                  </div>
+
+                  {/* Page Buttons Strip */}
+                  <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                      className="px-3 py-1.5 rounded-lg border border-stone-300 text-xs font-semibold flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-stone-100 hover:border-stone-400 text-stone-700"
+                      aria-label="Previous Page"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Previous</span>
+                    </button>
+
+                    {/* Numeric Pages */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
+                      // Smart ellipsis for many pages
+                      if (
+                        totalPages > 8 &&
+                        pg !== 1 &&
+                        pg !== totalPages &&
+                        Math.abs(pg - currentPage) > 2
+                      ) {
+                        if (pg === 2 || pg === totalPages - 1) {
+                          return (
+                            <span key={pg} className="px-1 text-stone-400 font-mono">
+                              …
+                            </span>
+                          );
+                        }
+                        return null;
+                      }
+
+                      const isActive = pg === currentPage;
+                      return (
+                        <button
+                          key={pg}
+                          onClick={() => handlePageChange(pg)}
+                          className={`w-8 h-8 rounded-lg text-xs font-mono font-semibold transition-all ${
+                            isActive
+                              ? 'bg-stone-900 border border-stone-900 text-white shadow-2xs'
+                              : 'bg-white border border-stone-200 hover:bg-stone-100 hover:border-stone-400 text-stone-700'
+                          }`}
+                          aria-label={`Go to page ${pg}`}
+                        >
+                          {pg}
+                        </button>
+                      );
+                    })}
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage >= totalPages}
+                      className="px-3 py-1.5 rounded-lg border border-stone-300 text-xs font-semibold flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-stone-100 hover:border-stone-400 text-stone-700"
+                      aria-label="Next Page"
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Fast Jump Indicator */}
+                  <div className="text-[11px] font-mono text-stone-400">
+                    Use &larr; / &rarr; to browse
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-16 text-center bg-white rounded-2xl border border-stone-200 p-8">

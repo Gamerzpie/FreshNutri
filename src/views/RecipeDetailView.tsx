@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allRecipes, getRecipeById } from '../data/recipes';
 import { authors } from '../data/authors';
@@ -16,14 +16,34 @@ import {
   ChefHat,
   Heart,
   ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   ShieldAlert,
   FolderPlus,
+  Compass,
 } from 'lucide-react';
 
 export const RecipeDetailView: React.FC = () => {
-  const { routeParams, goBack, isRecipeSaved, toggleSaveRecipe, openOrganizeModal, showToast } = useApp();
+  const { routeParams, goBack, navigate, isRecipeSaved, toggleSaveRecipe, openOrganizeModal, customRecipes, showToast } = useApp();
   const recipeSlug = routeParams.slug || routeParams.id;
-  const recipe = getRecipeById(recipeSlug) || allRecipes[0];
+
+  // Combine standard and custom recipes
+  const allAvailableRecipes = useMemo(() => {
+    return [...allRecipes, ...customRecipes];
+  }, [customRecipes]);
+
+  const recipe = useMemo(() => {
+    return allAvailableRecipes.find((r) => r.slug === recipeSlug || r.id === recipeSlug) || allRecipes[0];
+  }, [allAvailableRecipes, recipeSlug]);
+
+  const recipeIndex = useMemo(() => {
+    return allAvailableRecipes.findIndex((r) => r.id === recipe.id);
+  }, [allAvailableRecipes, recipe.id]);
+
+  const prevRecipe = recipeIndex > 0 ? allAvailableRecipes[recipeIndex - 1] : allAvailableRecipes[allAvailableRecipes.length - 1];
+  const nextRecipe = recipeIndex < allAvailableRecipes.length - 1 ? allAvailableRecipes[recipeIndex + 1] : allAvailableRecipes[0];
+
   const author = authors.find((a) => a.id === recipe.authorId);
   const saved = isRecipeSaved(recipe.id);
 
@@ -33,6 +53,20 @@ export const RecipeDetailView: React.FC = () => {
 
   // Ingredient check-off state
   const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
+
+  // Reset state and update document title when navigating between recipe pages
+  useEffect(() => {
+    if (recipe) {
+      setServings(recipe.servings || 4);
+      setCheckedIngredients({});
+      document.title = `${recipe.title} Recipe | FreshNutri Kitchen`;
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) {
+        meta.setAttribute('content', recipe.shortDescription || recipe.intro);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [recipe?.id]);
 
   // Dynamic multiplier for ingredient math
   const multiplier = servings / baseServings;
@@ -93,22 +127,57 @@ export const RecipeDetailView: React.FC = () => {
 
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-      {/* Back button & Breadcrumb */}
-      <div className="no-print flex items-center justify-between text-xs text-stone-500">
-        <button
-          onClick={goBack}
-          className="flex items-center gap-1.5 text-stone-600 hover:text-stone-900 transition-colors font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to previous page</span>
-        </button>
+      {/* Recipe Page Breadcrumb & Dedicated Pager Bar */}
+      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-500 border-b border-stone-200/80 pb-3.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => navigate('home')}
+            className="hover:text-stone-900 transition-colors"
+          >
+            Home
+          </button>
+          <span>/</span>
+          <button
+            onClick={() => navigate('recipes')}
+            className="hover:text-stone-900 transition-colors font-semibold text-stone-700"
+          >
+            All Recipes
+          </button>
+          <span>/</span>
+          <button
+            onClick={() => navigate('recipes', { sub: recipe.mealType[0] })}
+            className="text-emerald-800 hover:text-emerald-950 font-medium transition-colors"
+          >
+            {recipe.mealType[0]}
+          </button>
+          <span>/</span>
+          <span className="truncate max-w-[200px] text-stone-900 font-semibold" title={recipe.title}>
+            {recipe.title}
+          </span>
+        </div>
 
-        <div className="flex items-center gap-1 text-[11px]">
-          <span>Recipes</span>
-          <span>/</span>
-          <span className="text-emerald-800 font-medium">{recipe.mealType[0]}</span>
-          <span>/</span>
-          <span className="truncate max-w-[160px] text-stone-800">{recipe.title}</span>
+        {/* Recipe Page Pager: Recipe X of Y */}
+        <div className="flex items-center gap-2 self-end sm:self-auto font-mono text-[11px]">
+          <span className="text-stone-400">
+            Recipe <strong className="text-stone-800">{recipeIndex >= 0 ? recipeIndex + 1 : 1}</strong> of {allAvailableRecipes.length}
+          </span>
+          <span className="text-stone-300">·</span>
+          <button
+            onClick={() => navigate('recipe', { slug: prevRecipe.slug })}
+            className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-md text-stone-700 transition-colors flex items-center gap-1 shadow-2xs"
+            title={`Previous recipe: ${prevRecipe.title}`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Prev</span>
+          </button>
+          <button
+            onClick={() => navigate('recipe', { slug: nextRecipe.slug })}
+            className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-200 rounded-md text-stone-700 transition-colors flex items-center gap-1 shadow-2xs"
+            title={`Next recipe: ${nextRecipe.title}`}
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -425,6 +494,72 @@ export const RecipeDetailView: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Dedicated Recipe Page Navigator (Previous & Next Recipe Pages) */}
+      <section className="no-print pt-8 border-t-2 border-stone-200 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <span className="font-mono uppercase tracking-wider text-stone-500 font-semibold">
+            Recipe Directory Navigation · Page {recipeIndex >= 0 ? recipeIndex + 1 : 1} of {allAvailableRecipes.length}
+          </span>
+          <button
+            onClick={() => navigate('recipes')}
+            className="text-emerald-800 hover:text-emerald-950 font-semibold flex items-center gap-1 transition-colors self-start sm:self-auto"
+          >
+            <span>Browse All {allAvailableRecipes.length} Recipes</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Previous Recipe Page Card */}
+          <div
+            onClick={() => navigate('recipe', { slug: prevRecipe.slug })}
+            className="group cursor-pointer p-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200 transition-all hover:border-emerald-700 hover:shadow-xs flex items-center gap-4"
+          >
+            <img
+              src={prevRecipe.heroImage}
+              alt=""
+              className="w-16 h-16 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5 flex items-center gap-1">
+                <ChevronLeft className="w-3 h-3 text-emerald-700" />
+                <span>Previous Recipe Page</span>
+              </span>
+              <h4 className="font-serif text-sm font-semibold text-stone-900 group-hover:text-emerald-900 transition-colors line-clamp-1">
+                {prevRecipe.title}
+              </h4>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {prevRecipe.totalTime} mins · {prevRecipe.cuisine}
+              </span>
+            </div>
+          </div>
+
+          {/* Next Recipe Page Card */}
+          <div
+            onClick={() => navigate('recipe', { slug: nextRecipe.slug })}
+            className="group cursor-pointer p-4 bg-white hover:bg-stone-50 rounded-2xl border border-stone-200 transition-all hover:border-emerald-700 hover:shadow-xs flex items-center gap-4 text-right sm:flex-row-reverse"
+          >
+            <img
+              src={nextRecipe.heroImage}
+              alt=""
+              className="w-16 h-16 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5 flex items-center justify-end gap-1">
+                <span>Next Recipe Page</span>
+                <ChevronRight className="w-3 h-3 text-emerald-700" />
+              </span>
+              <h4 className="font-serif text-sm font-semibold text-stone-900 group-hover:text-emerald-900 transition-colors line-clamp-1">
+                {nextRecipe.title}
+              </h4>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {nextRecipe.totalTime} mins · {nextRecipe.cuisine}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
     </article>
   );
 };
