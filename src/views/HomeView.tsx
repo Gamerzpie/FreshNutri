@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allRecipes, getFeaturedRecipes, getTrendingRecipes, getQuickRecipes, getHighProteinRecipes } from '../data/recipes';
 import { allArticles, getFeaturedArticles, getTrendingArticles } from '../data/articles';
@@ -8,10 +8,21 @@ import { RecipeCard } from '../components/RecipeCard';
 import { ArticleCard } from '../components/ArticleCard';
 import { MealPlanCard } from '../components/MealPlanCard';
 import { RecipeSlideshow } from '../components/RecipeSlideshow';
-import { ArrowRight, Flame, Clock, Sparkles, BookOpen, ChefHat, Calendar, HeartPulse, ShieldCheck } from 'lucide-react';
+import { setPageSEO, defaultKeywords } from '../utils/seo';
+import { ArrowRight, Flame, Clock, Sparkles, BookOpen, ChefHat, Calendar, HeartPulse, ShieldCheck, CheckCircle2, Zap } from 'lucide-react';
 
 export const HomeView: React.FC = () => {
   const { navigate, openNewsletter } = useApp();
+
+  useEffect(() => {
+    setPageSEO({
+      title: 'FreshNutri – Healthy Recipes, Nutrition & Editorial Food Magazine',
+      description: 'Discover healthy recipes, science-backed nutrition, curated 7-day meal plans, and mindful lifestyle guides from the editors of FreshNutri. The dietitian-verified whole-food alternative to Allrecipes, NYT Cooking, and EatingWell.',
+      keywords: defaultKeywords,
+      canonicalPath: '/',
+      ogType: 'website',
+    });
+  }, []);
 
   const featuredRecipes = getFeaturedRecipes();
   const trendingRecipes = getTrendingRecipes();
@@ -571,6 +582,110 @@ export const HomeView: React.FC = () => {
           {trendingArticles.slice(0, 3).map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
+        </div>
+      </section>
+
+      {/* 8.5 Competitor Alternative & Editorial Credibility Section (Google SEO Comparison) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-3xl border border-stone-200 p-8 sm:p-12 space-y-8 shadow-2xs">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-widest text-emerald-800 font-semibold font-mono block mb-1.5">
+              The Modern Cooking Experience
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-stone-900 tracking-tight">
+              Why Mindful Cooks Choose FreshNutri Over Traditional Recipe Sites
+            </h2>
+            <p className="mt-2.5 text-stone-600 text-sm sm:text-base leading-relaxed">
+              Tired of cluttered, paywalled, or unverified recipe websites like Allrecipes, NYT Cooking, EatingWell, and Skinnytaste? FreshNutri delivers a calm, 100% free test-kitchen alternative built for whole-food nutrition and culinary precision.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Comparison Card 1: vs Allrecipes */}
+            <div className="p-5 bg-stone-50/80 rounded-2xl border border-stone-200/90 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-emerald-800 font-bold uppercase tracking-wider">VS ALLRECIPES</span>
+                <span className="text-stone-400">Verified 3x</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900">
+                Dietitian-Calibrated, Not Unverified Submissions
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Unlike crowdsourced directories filled with unverified home submissions and intrusive popups, every FreshNutri recipe is tested up to 4 times on real home stoves with certified USDA macros.
+              </p>
+              <div className="pt-1 flex items-center gap-1.5 text-[11px] text-emerald-800 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Zero fluff or unvetted recipes</span>
+              </div>
+            </div>
+
+            {/* Comparison Card 2: vs NYT Cooking */}
+            <div className="p-5 bg-stone-50/80 rounded-2xl border border-stone-200/90 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-emerald-800 font-bold uppercase tracking-wider">VS NYT COOKING</span>
+                <span className="text-stone-400">100% Free</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900">
+                Chef-Quality Flavor Without Paywalls
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Enjoy world-class culinary standards, artisanal grain bowls, slow-simmered broths, and pan-seared wild seafood without being blocked by monthly subscription barriers or forced logins.
+              </p>
+              <div className="pt-1 flex items-center gap-1.5 text-[11px] text-emerald-800 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>No paywalls or subscription fees</span>
+              </div>
+            </div>
+
+            {/* Comparison Card 3: vs EatingWell */}
+            <div className="p-5 bg-stone-50/80 rounded-2xl border border-stone-200/90 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-emerald-800 font-bold uppercase tracking-wider">VS EATINGWELL</span>
+                <span className="text-stone-400">Dynamic Live</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900">
+                Live Macro Recalculation as You Scale
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Traditional sites show fixed nutrition tables. On FreshNutri, scale your dinner from 2 to 8 servings and our USDA-backed calculator recalculates calories, protein, and minerals in real time.
+              </p>
+              <div className="pt-1 flex items-center gap-1.5 text-[11px] text-emerald-800 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Dynamic real-time nutrition</span>
+              </div>
+            </div>
+
+            {/* Comparison Card 4: vs Skinnytaste & Yummly */}
+            <div className="p-5 bg-stone-50/80 rounded-2xl border border-stone-200/90 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-emerald-800 font-bold uppercase tracking-wider">VS SKINNYTASTE</span>
+                <span className="text-stone-400">Full 7-Day</span>
+              </div>
+              <h3 className="font-serif text-base font-semibold text-stone-900">
+                Structured 7-Day Protocols & Grocery Lists
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Go beyond single low-calorie dishes with complete weekly clinical plans (Mediterranean, Anti-Inflammatory, High-Protein) complete with printable categorized shopping checklists.
+              </p>
+              <div className="pt-1 flex items-center gap-1.5 text-[11px] text-emerald-800 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Printable smart shopping checklists</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-stone-200">
+            <span className="text-xs text-stone-500 font-mono">
+              Tested on induction, gas, and conventional electric kitchen equipment.
+            </span>
+            <button
+              onClick={() => navigate('about')}
+              className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-1.5 transition-colors"
+            >
+              <span>Explore our full test-kitchen methodology</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </section>
 

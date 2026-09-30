@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { allMealPlans, getMealPlanById } from '../data/mealPlans';
 import { authors } from '../data/authors';
+import { setPageSEO } from '../utils/seo';
 import {
   Calendar,
   Clock,
@@ -24,12 +25,44 @@ export const MealPlanDetailView: React.FC = () => {
   const plan = getMealPlanById(slug) || allMealPlans[0];
   const author = authors.find((a) => a.id === plan.authorId);
 
-  // Sync title and scroll to top
+  // Sync title, HowTo Schema, and scroll to top
   useEffect(() => {
     if (plan) {
-      document.title = `${plan.title} (7-Day Protocol) | FreshNutri Meal Plans`;
-      const meta = document.querySelector('meta[name="description"]');
-      if (meta) meta.setAttribute('content', plan.description);
+      setPageSEO({
+        title: `${plan.title} (7-Day Protocol) | FreshNutri Meal Plans`,
+        description: plan.description,
+        keywords: [
+          ...plan.tags,
+          plan.dietType,
+          '7-day meal plan',
+          'eatingwell meal plans alternative',
+          'skinnytaste meal plan alternative',
+          'healthy grocery checklist',
+          'structured meal prep plan',
+          'mediterranean diet meal plan',
+        ].join(', '),
+        canonicalPath: `/#/meal-plan/${plan.slug}`,
+        ogImage: plan.heroImage,
+        ogType: 'article',
+        schema: {
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: plan.title,
+          description: plan.description,
+          totalTime: 'P7D',
+          supply: plan.shoppingList.flatMap((cat) =>
+            cat.items.map((it) => ({
+              '@type': 'HowToSupply',
+              name: it,
+            }))
+          ),
+          step: plan.days.map((day) => ({
+            '@type': 'HowToStep',
+            name: `Day ${day.dayNumber}: ${day.dayName}`,
+            text: `Breakfast: ${day.breakfast.title}, Lunch: ${day.lunch.title}, Dinner: ${day.dinner.title}. Target: ${day.dailyCalories} kcal, ${day.dailyProtein}g protein.`,
+          })),
+        },
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [plan?.id]);

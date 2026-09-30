@@ -1,0 +1,22 @@
+# FreshNutri Robots.txt
+# Comprehensive directives for Googlebot, Bingbot, and modern web crawlers
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Explicit bot directives
+User-agent: Googlebot
+Allow: /
+Allow: /assets/
+Allow: /public/
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /assets/
+
+User-agent: Bingbot
+Allow: /
+
+# Canonical XML Sitemap
+Sitemap: https://freshnutri.com/sitemap.xml

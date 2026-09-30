@@ -6,6 +6,7 @@ import { SearchModal } from './components/SearchModal';
 import { NewsletterModal } from './components/NewsletterModal';
 import { OrganizeCollectionModal } from './components/OrganizeCollectionModal';
 import { ToastContainer } from './components/ToastContainer';
+import { NativeBannerAd, StickyAdBar } from './components/AdUnits';
 
 // Views
 import { HomeView } from './views/HomeView';
@@ -75,10 +76,12 @@ const MainContent: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF9F5] text-stone-900 selection:bg-emerald-100 selection:text-emerald-950 font-sans">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pb-16">
         {renderCurrentView()}
+        <NativeBannerAd className="my-8" />
       </main>
       <Footer />
+      <StickyAdBar />
       <SearchModal />
       <NewsletterModal />
       {organizeRecipeModalId && (

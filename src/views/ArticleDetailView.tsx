@@ -5,6 +5,8 @@ import { authors } from '../data/authors';
 import { allRecipes } from '../data/recipes';
 import { RecipeCard } from '../components/RecipeCard';
 import { ArticleCard } from '../components/ArticleCard';
+import { Banner320x50, SmartlinkCard } from '../components/AdUnits';
+import { setPageSEO, buildArticleSchema } from '../utils/seo';
 import {
   Clock,
   ArrowLeft,
@@ -40,15 +42,30 @@ export const ArticleDetailView: React.FC = () => {
 
   const author = authors.find((a) => a.id === article.authorId);
 
-  // Sync document title and scroll to top on article change
+  // Sync document title, rich NewsArticle Schema, and scroll to top on article change
   useEffect(() => {
     if (article) {
-      document.title = `${article.title} | FreshNutri Magazine`;
-      const meta = document.querySelector('meta[name="description"]');
-      if (meta) meta.setAttribute('content', article.subtitle);
+      const schema = buildArticleSchema(article, author?.name);
+      setPageSEO({
+        title: `${article.title} | FreshNutri Magazine`,
+        description: article.subtitle,
+        keywords: [
+          ...article.tags,
+          article.category,
+          'nutrition research',
+          'eatingwell alternative article',
+          'healthline nutrition alternative',
+          'evidence-based food guide',
+          'science-backed recipes',
+        ].join(', '),
+        canonicalPath: `/#/article/${article.slug}`,
+        ogImage: article.heroImage,
+        ogType: 'article',
+        schema,
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [article?.id]);
+  }, [article?.id, author?.name]);
 
   const relatedRecipes = useMemo(() => {
     return allRecipes.filter((r) => article.relatedRecipeIds.includes(r.id)).slice(0, 2);
@@ -271,6 +288,12 @@ export const ArticleDetailView: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Editorial Sponsor Placement */}
+      <div className="my-6 space-y-4">
+        <Banner320x50 className="py-2" />
+        <SmartlinkCard label="Featured Health & Culinary Partner Offers" />
+      </div>
 
       {/* Related Recipes Callout Box */}
       {relatedRecipes.length > 0 && (

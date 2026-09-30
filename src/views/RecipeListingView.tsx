@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allRecipes } from '../data/recipes';
 import { RecipeCard } from '../components/RecipeCard';
+import { setPageSEO } from '../utils/seo';
 import {
   DifficultyLevel,
   Cuisine,
@@ -48,9 +49,24 @@ export const RecipeListingView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(12);
 
-  // Set document title
+  // Set document title and rich catalog SEO
   useEffect(() => {
-    document.title = 'All Recipes Directory | FreshNutri Kitchen';
+    setPageSEO({
+      title: 'Searchable Healthy Recipes Directory | FreshNutri Kitchen',
+      description: 'Explore whole-food, chef-tested healthy recipes with live macro nutrition calculations. The clutter-free, verified alternative to Allrecipes and EatingWell.',
+      keywords: [
+        'all healthy recipes',
+        'recipe database',
+        'allrecipes alternative',
+        'clean eating recipes',
+        'nyt cooking alternative recipes',
+        'dietitian tested dinners',
+        'macro friendly recipes',
+        'whole food recipe catalog',
+      ].join(', '),
+      canonicalPath: '/#/recipes',
+      ogType: 'website',
+    });
   }, []);
 
   // Reset to Page 1 when any filter changes

@@ -4,6 +4,8 @@ import { allRecipes, getRecipeById } from '../data/recipes';
 import { authors } from '../data/authors';
 import { RecipeCard } from '../components/RecipeCard';
 import { InteractiveNutritionCalculator } from '../components/InteractiveNutritionCalculator';
+import { Banner320x50, SmartlinkCard } from '../components/AdUnits';
+import { setPageSEO, buildRecipeSchema } from '../utils/seo';
 import {
   Clock,
   Star,
@@ -54,19 +56,35 @@ export const RecipeDetailView: React.FC = () => {
   // Ingredient check-off state
   const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
 
-  // Reset state and update document title when navigating between recipe pages
+  // Reset state and update document title & rich Schema.org recipe metadata
   useEffect(() => {
     if (recipe) {
       setServings(recipe.servings || 4);
       setCheckedIngredients({});
-      document.title = `${recipe.title} Recipe | FreshNutri Kitchen`;
-      const meta = document.querySelector('meta[name="description"]');
-      if (meta) {
-        meta.setAttribute('content', recipe.shortDescription || recipe.intro);
-      }
+      const schema = buildRecipeSchema(recipe, author?.name);
+      setPageSEO({
+        title: `${recipe.title} Recipe | FreshNutri Kitchen`,
+        description: recipe.shortDescription || recipe.intro,
+        keywords: [
+          ...recipe.dietaryTags,
+          recipe.cuisine,
+          recipe.mainIngredient,
+          'healthy recipe',
+          'clean eating',
+          'Allrecipes healthy alternative',
+          'NYT Cooking free alternative',
+          'EatingWell alternative',
+          'Skinnytaste alternative',
+          'USDA nutrition calculator',
+        ].join(', '),
+        canonicalPath: `/#/recipe/${recipe.slug}`,
+        ogImage: recipe.heroImage,
+        ogType: 'article',
+        schema,
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [recipe?.id]);
+  }, [recipe?.id, author?.name]);
 
   // Dynamic multiplier for ingredient math
   const multiplier = servings / baseServings;
@@ -383,6 +401,12 @@ export const RecipeDetailView: React.FC = () => {
           })}
         </ul>
       </section>
+
+      {/* Mid-Recipe Sponsor & 320x50 Ad Placement */}
+      <div className="no-print my-6 space-y-4">
+        <Banner320x50 className="py-2" />
+        <SmartlinkCard label="Special Partner Offers for Home Chefs" />
+      </div>
 
       {/* Step-by-Step Instructions */}
       <section className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 space-y-6">

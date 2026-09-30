@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Bookmark, Mail, Menu, X, ArrowRight } from 'lucide-react';
+import { Search, Bookmark, Mail, Menu, X, ArrowRight, Sparkles, ExternalLink } from 'lucide-react';
+import { SMARTLINK_URL } from './AdUnits';
 
 export const Header: React.FC = () => {
   const { currentRoute, navigate, savedRecipeIds, openSearch, openNewsletter } = useApp();
@@ -31,11 +32,21 @@ export const Header: React.FC = () => {
             <span>Science-Backed Nutrition & Test-Kitchen Tested Recipes</span>
           </div>
           <div className="flex items-center gap-4 text-stone-400">
+            <a
+              href={SMARTLINK_URL}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
+            >
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>Partner Deals 🔥</span>
+            </a>
+            <span aria-hidden="true">·</span>
             <button
               onClick={() => navigate('health-diets', { slug: 'hypertension-dash-diet' })}
               className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
             >
-              DASH Blood Pressure Diet
+              DASH Diet
             </button>
             <span aria-hidden="true">·</span>
             <button
@@ -43,13 +54,6 @@ export const Header: React.FC = () => {
               className="hover:text-stone-200 transition-colors"
             >
               Our Testing Process
-            </button>
-            <span aria-hidden="true">·</span>
-            <button
-              onClick={() => navigate('admin')}
-              className="hover:text-stone-200 transition-colors"
-            >
-              Editorial Desk
             </button>
           </div>
         </div>
