@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { ConditionDiet, Recipe } from '../types';
 import { allConditionDiets } from '../data/conditionDiets';
 import { allRecipes, getRecipeById } from '../data/recipes';
 import { RecipeCard } from '../components/RecipeCard';
+import { setPageSEO } from '../utils/seo';
 import {
   HeartPulse,
   Activity,
@@ -42,6 +43,33 @@ export const HealthConditionsDietView: React.FC = () => {
       .map((id) => getRecipeById(id))
       .filter((r): r is NonNullable<typeof r> => Boolean(r));
   }, [currentDiet]);
+
+  // Sync document title and MedicalWebPage schema for Google
+  useEffect(() => {
+    if (currentDiet) {
+      setPageSEO({
+        title: `${currentDiet.dietProtocolName} (${currentDiet.conditionName}) | FreshNutri`,
+        description: currentDiet.overview || currentDiet.headline,
+        keywords: `${currentDiet.dietProtocolName}, ${currentDiet.conditionName}, clinical diet, hypertension nutrition, diabetes diet, DASH diet protocol, medical nutrition therapy, dietitian guidance`,
+        canonicalPath: `/#/health-diets?slug=${currentDiet.slug}`,
+        ogType: 'article',
+        schema: {
+          '@context': 'https://schema.org',
+          '@type': 'MedicalWebPage',
+          name: `${currentDiet.dietProtocolName} Clinical Nutrition Therapy`,
+          description: currentDiet.overview || currentDiet.headline,
+          about: {
+            '@type': 'MedicalCondition',
+            name: currentDiet.conditionName,
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'FreshNutri Test Kitchen & Clinical Board',
+          },
+        },
+      });
+    }
+  }, [currentDiet?.slug]);
 
   // Interactive BP & Sodium Meal Calculator State
   const [calcSodium, setCalcSodium] = useState<number>(420);

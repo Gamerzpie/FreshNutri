@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { allArticles } from '../data/articles';
 import { ArticleCard } from '../components/ArticleCard';
 import { ArticleCategory } from '../types';
+import { setPageSEO } from '../utils/seo';
 import { Search, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const ArticleListingView: React.FC = () => {
@@ -14,9 +15,22 @@ export const ArticleListingView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 9;
 
-  // Set document title
+  // Set document title and rich editorial SEO
   useEffect(() => {
-    document.title = 'Editorial Articles & Guides | FreshNutri Magazine';
+    setPageSEO({
+      title: 'Nutrition & Healthy Eating Articles | FreshNutri Magazine',
+      description: 'Evidence-based nutrition guides, whole-food cooking techniques, and clinical dietitian articles. The verified editorial alternative to EatingWell and Food52.',
+      keywords: 'nutrition articles, healthy eating guide, evidence based diet, cooking tips, eatingwell alternative, whole food nutrition magazine',
+      canonicalPath: '/#/articles',
+      ogType: 'website',
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Nutrition & Healthy Eating Articles | FreshNutri Magazine',
+        description: 'Evidence-based nutrition guides and whole-food cooking techniques.',
+        url: `${window.location.origin}/#/articles`,
+      },
+    });
   }, []);
 
   // Combine standard and custom articles

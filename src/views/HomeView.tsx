@@ -8,6 +8,7 @@ import { RecipeCard } from '../components/RecipeCard';
 import { ArticleCard } from '../components/ArticleCard';
 import { MealPlanCard } from '../components/MealPlanCard';
 import { RecipeSlideshow } from '../components/RecipeSlideshow';
+import { Banner320x50, BannerRow, SmartlinkCard } from '../components/AdUnits';
 import { setPageSEO, defaultKeywords } from '../utils/seo';
 import { ArrowRight, Flame, Clock, Sparkles, BookOpen, ChefHat, Calendar, HeartPulse, ShieldCheck, CheckCircle2, Zap } from 'lucide-react';
 
@@ -126,6 +127,11 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
+      {/* Ad BEFORE Slide Show */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <BannerRow />
+      </div>
+
       {/* Featured Recipe Showcase Slideshow */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6 pb-2 border-b border-stone-200">
@@ -144,6 +150,11 @@ export const HomeView: React.FC = () => {
 
         <RecipeSlideshow recipes={slideshowRecipes} autoPlayInterval={5000} />
       </section>
+
+      {/* Hero Sponsored Ad Strip */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <BannerRow />
+      </div>
 
       {/* 2. Recipe of the Day & Quick Category Rail */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -202,6 +213,11 @@ export const HomeView: React.FC = () => {
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
+
+            {/* Ad AFTER Recipe of the Day */}
+            <div className="mt-4 pt-3 border-t border-stone-100 flex justify-center">
+              <Banner320x50 label="Recipe of the Day Sponsor" className="my-0 scale-95 origin-center" />
+            </div>
           </div>
 
           {/* Editorial Category Landing Rail */}
@@ -250,8 +266,23 @@ export const HomeView: React.FC = () => {
                 Every recipe is prepared up to 4 times by our culinary nutrition team to calibrate cooking temperatures, sodium, and flavor balance.
               </div>
             </div>
+
+            {/* Ad AFTER Explore by Course and Category */}
+            <div className="mt-4 pt-3 border-t border-stone-200 flex justify-center">
+              <Banner320x50 label="Culinary Course & Category Deals" className="my-0 scale-95 origin-center" />
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* Featured Partner Deals Promo Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SmartlinkCard
+          variant="emerald"
+          label="Featured Nutrition & Kitchen Essentials"
+          subtext="Exclusive deals on dietitian-recommended blenders, cast iron skillets, organic olive oil, and clean protein powders."
+          buttonText="Explore Partner Discounts"
+        />
       </section>
 
       {/* 3. Trending Recipes (4-Card Recipe Grid) */}
@@ -279,6 +310,17 @@ export const HomeView: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Ad AFTER Trending Healthy Recipes */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 space-y-4">
+        <BannerRow />
+        <SmartlinkCard
+          variant="amber"
+          label="Trending Partner Discounts & Tested Kitchen Tools"
+          subtext="Special pricing on high-powered blenders, stainless steel cookware sets, and organic pantry subscriptions."
+          buttonText="Claim Trending Offers"
+        />
+      </div>
 
       {/* 4. Large Editorial Feature (Lead Essay + Side Articles) */}
       <section className="bg-white border-y border-stone-200/80 py-14">
@@ -316,6 +358,11 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
+      {/* Ad AFTER Latest Evidence Based Guidance */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6">
+        <BannerRow />
+      </div>
+
       {/* 5. Quick & Easy Weeknight Dinners (Under 30 Minutes) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-6 pb-2 border-b border-stone-200">
@@ -341,6 +388,11 @@ export const HomeView: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Ad AFTER Busy Weeknights */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6">
+        <BannerRow />
+      </div>
 
       {/* 6. Spotlight 7-Day Meal Plan (Two-Column Feature) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -398,6 +450,16 @@ export const HomeView: React.FC = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Special Deals Callout */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SmartlinkCard
+          variant="amber"
+          label="Weekly Grocery & Organic Meal-Prep Discounts"
+          subtext="Exclusive partner coupons for organic produce delivery, wild seafood boxes, and grass-fed meat subscriptions."
+          buttonText="Claim Grocery Deals"
+        />
       </section>
 
       {/* Clinical Diets & Blood Pressure Management Showcase */}
@@ -502,6 +564,11 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
+      {/* Ad AFTER Medical Nutrition */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6">
+        <BannerRow />
+      </div>
+
       {/* 7. High-Protein & Vegetarian Culinary Split */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -529,6 +596,11 @@ export const HomeView: React.FC = () => {
                 <RecipeCard key={recipe.id} recipe={recipe} />
               ))}
             </div>
+
+            {/* Ad AFTER Safety & Muscle Health */}
+            <div className="mt-4 flex justify-center">
+              <Banner320x50 label="High-Protein Nutrition Partner" className="my-0 scale-95 origin-center" />
+            </div>
           </div>
 
           {/* Plant-Forward Vegetarian Section */}
@@ -555,9 +627,19 @@ export const HomeView: React.FC = () => {
                 <RecipeCard key={recipe.id} recipe={recipe} />
               ))}
             </div>
+
+            {/* Ad AFTER Plant Abundance */}
+            <div className="mt-4 flex justify-center">
+              <Banner320x50 label="Plant-Based Living Sponsor" className="my-0 scale-95 origin-center" />
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Culinary Partner Banner Row */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <BannerRow />
+      </div>
 
       {/* 8. Magazine Section: Healthy Lifestyle & Food News */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -584,6 +666,17 @@ export const HomeView: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Ad AFTER Mindful Living */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 space-y-4">
+        <BannerRow />
+        <SmartlinkCard
+          variant="amber"
+          label="Mindful Wellness & Organic Lifestyle Deals"
+          subtext="Exclusive member perks on sustainable kitchenware, herbal teas, and adaptogenic supplements."
+          buttonText="Explore Wellness Deals"
+        />
+      </div>
 
       {/* 8.5 Competitor Alternative & Editorial Credibility Section (Google SEO Comparison) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -688,6 +781,17 @@ export const HomeView: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Ad AFTER Modern Cooking Experience */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 space-y-4">
+        <BannerRow />
+        <SmartlinkCard
+          variant="dark"
+          label="Tested Kitchenware, Gadgets & Dietitian Discounts"
+          subtext="Discover top-rated non-toxic cookware, Japanese steel knives, high-speed blenders, and USDA organic food partners."
+          buttonText="Explore All Offers"
+        />
+      </div>
 
       {/* 9. Newsletter Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

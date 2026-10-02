@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allRecipes } from '../data/recipes';
 import { RecipeCard } from '../components/RecipeCard';
+import { Banner320x50, BannerRow, InFeedAdCard, SmartlinkCard } from '../components/AdUnits';
 import { setPageSEO } from '../utils/seo';
 import {
   DifficultyLevel,
@@ -66,6 +67,24 @@ export const RecipeListingView: React.FC = () => {
       ].join(', '),
       canonicalPath: '/#/recipes',
       ogType: 'website',
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Searchable Healthy Recipes Directory | FreshNutri Kitchen',
+        description: 'Explore whole-food, chef-tested healthy recipes with live macro nutrition calculations. The clutter-free, verified alternative to Allrecipes and EatingWell.',
+        url: `${window.location.origin}/#/recipes`,
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: allAvailableRecipes.length,
+          itemListElement: allAvailableRecipes.slice(0, 12).map((r, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${window.location.origin}/#/recipe/${r.slug}`,
+            name: r.title,
+            image: r.heroImage,
+          })),
+        },
+      },
     });
   }, []);
 
@@ -658,14 +677,31 @@ export const RecipeListingView: React.FC = () => {
             </div>
           </div>
 
+          {/* Top In-Catalog Ad Banner */}
+          <Banner320x50 label="Sponsored Deals & Culinary Partner Discounts" className="my-2" />
+
           {/* Recipe Grid */}
           {filteredRecipes.length > 0 ? (
             <div className="space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedRecipes.map((recipe) => (
-                  <RecipeCard key={recipe.id} recipe={recipe} />
+                {paginatedRecipes.map((recipe, index) => (
+                  <React.Fragment key={recipe.id}>
+                    <RecipeCard recipe={recipe} />
+                    {/* Interleave In-Feed Ad Cards in the recipe catalog */}
+                    {(index + 1) % 4 === 0 && (
+                      <InFeedAdCard key={`ad-feed-${index}`} />
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
+
+              {/* Bottom In-Catalog Smartlink Promotion Card */}
+              <SmartlinkCard
+                variant="amber"
+                label="Weekly Kitchen & Grocery Partner Specials"
+                subtext="Save up to 40% on test-kitchen approved cookware, chef's knives, organic pantry boxes, and cold-pressed oils."
+                buttonText="View Partner Deals"
+              />
 
               {/* Numbered Pagination Navigation Bar */}
               {totalPages > 1 && (

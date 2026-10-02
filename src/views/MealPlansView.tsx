@@ -1,12 +1,23 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allMealPlans } from '../data/mealPlans';
 import { MealPlanCard } from '../components/MealPlanCard';
+import { setPageSEO } from '../utils/seo';
 import { Calendar, Search } from 'lucide-react';
 
 export const MealPlansView: React.FC = () => {
   const [selectedDiet, setSelectedDiet] = useState<string>('all');
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    setPageSEO({
+      title: '7-Day Healthy Meal Plans with Grocery Lists | FreshNutri',
+      description: 'Structured 7-day whole-food meal plans designed by registered dietitians with printable grocery checklists. Mediterranean, high-protein, and anti-inflammatory plans.',
+      keywords: '7-day meal plans, healthy grocery list, weekly meal planning, mediterranean diet plan, high protein meal plan, eatingwell meal plans alternative, structured diet plans',
+      canonicalPath: '/#/meal-plans',
+      ogType: 'website',
+    });
+  }, []);
 
   const diets = [
     'All',

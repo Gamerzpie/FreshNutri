@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { lifestyleCategories } from '../data/categories';
 import { allArticles } from '../data/articles';
 import { ArticleCard } from '../components/ArticleCard';
+import { setPageSEO } from '../utils/seo';
 import { ArrowRight, Compass, Sun, Moon, Heart } from 'lucide-react';
 
 export const HealthyLifestyleView: React.FC = () => {
   const { navigate } = useApp();
+
+  useEffect(() => {
+    setPageSEO({
+      title: 'Mindful Living, Kitchen Rituals & Wellness Journal | FreshNutri',
+      description: 'Culinary rituals, circadian meal timing, restful sleep habits, pantry organization, and sustainable low-waste cooking principles.',
+      keywords: 'healthy lifestyle, mindful living, wellness habits, circadian meal timing, pantry organization, sustainable kitchen tips',
+      canonicalPath: '/#/lifestyle',
+      ogType: 'website',
+    });
+  }, []);
 
   const lifestyleArticles = allArticles.filter(
     (a) =>

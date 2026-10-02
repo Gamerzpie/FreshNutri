@@ -5,6 +5,7 @@ import { allRecipes } from '../data/recipes';
 import { allArticles } from '../data/articles';
 import { RecipeCard } from '../components/RecipeCard';
 import { ArticleCard } from '../components/ArticleCard';
+import { setPageSEO } from '../utils/seo';
 import { ArrowLeft, ArrowRight, Compass } from 'lucide-react';
 
 export const CategoryPageView: React.FC = () => {
@@ -17,10 +18,23 @@ export const CategoryPageView: React.FC = () => {
     return all.find((c) => c.slug === slug || c.id === slug) || recipeCategories[0];
   }, [slug]);
 
-  // Sync title and scroll to top
+  // Sync title and SEO
   useEffect(() => {
     if (category) {
-      document.title = `${category.name} | FreshNutri Category Archive`;
+      setPageSEO({
+        title: `${category.name} Recipes & Articles | FreshNutri`,
+        description: `${category.description} Explore dietitian-tested recipes and evidence-based nutritional guidance for ${category.name}.`,
+        keywords: `${category.name}, ${category.name} recipes, healthy ${category.name}, easy whole food meals, FreshNutri category`,
+        canonicalPath: `/#/category/${category.slug}`,
+        ogType: 'website',
+        schema: {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: `${category.name} Recipes & Articles`,
+          description: category.description,
+          url: `${window.location.origin}/#/category/${category.slug}`,
+        },
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [category?.id]);

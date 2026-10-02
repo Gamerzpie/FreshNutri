@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { nutritionCategories } from '../data/categories';
 import { allArticles } from '../data/articles';
 import { allRecipes } from '../data/recipes';
 import { ArticleCard } from '../components/ArticleCard';
 import { RecipeCard } from '../components/RecipeCard';
+import { setPageSEO } from '../utils/seo';
 import { ArrowRight, ShieldCheck, HeartPulse, Sparkles, BookOpen } from 'lucide-react';
 
 export const NutritionHubView: React.FC = () => {
   const { navigate } = useApp();
+
+  useEffect(() => {
+    setPageSEO({
+      title: 'Evidence-Based Nutrition Science & Diet Guides | FreshNutri',
+      description: 'Rigorous dietary reporting reviewed by registered dietitians. Translating clinical randomized trials into practical daily meals and healthy protocols.',
+      keywords: 'nutrition science, evidence based nutrition, clinical diet protocols, dietitian approved guides, eatingwell alternative, food as medicine',
+      canonicalPath: '/#/nutrition',
+      ogType: 'website',
+    });
+  }, []);
 
   const nutritionArticles = allArticles.filter(
     (a) =>

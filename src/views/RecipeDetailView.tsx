@@ -4,7 +4,7 @@ import { allRecipes, getRecipeById } from '../data/recipes';
 import { authors } from '../data/authors';
 import { RecipeCard } from '../components/RecipeCard';
 import { InteractiveNutritionCalculator } from '../components/InteractiveNutritionCalculator';
-import { Banner320x50, SmartlinkCard } from '../components/AdUnits';
+import { Banner320x50, BannerRow, SmartlinkCard } from '../components/AdUnits';
 import { setPageSEO, buildRecipeSchema } from '../utils/seo';
 import {
   Clock,
@@ -322,6 +322,11 @@ export const RecipeDetailView: React.FC = () => {
         </div>
       </div>
 
+      {/* Top Recipe Sponsor Banner */}
+      <div className="no-print my-2">
+        <Banner320x50 label="Kitchen & Cooking Partner Deals" className="my-1" />
+      </div>
+
       {/* Interactive Ingredients Section with Dynamic Servings Control */}
       <section className="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
@@ -420,28 +425,36 @@ export const RecipeDetailView: React.FC = () => {
         </div>
 
         <ol className="space-y-6">
-          {recipe.instructions.map((inst) => (
-            <li key={inst.step} className="flex gap-4 items-start">
-              <span className="w-8 h-8 rounded-full bg-stone-900 text-white font-mono text-sm font-semibold flex items-center justify-center shrink-0 mt-0.5">
-                {inst.step}
-              </span>
-              <div className="space-y-1.5 flex-1">
-                {inst.title && (
-                  <h3 className="font-serif text-lg font-semibold text-stone-900">
-                    {inst.title}
-                  </h3>
-                )}
-                <p className="text-sm text-stone-700 leading-relaxed">
-                  {inst.text}
-                </p>
-                {inst.tip && (
-                  <div className="mt-2 p-3 bg-amber-50/70 border border-amber-200/80 rounded-lg text-xs text-amber-950 font-medium">
-                    <strong className="block mb-0.5">Chef's Technique Tip:</strong>
-                    {inst.tip}
-                  </div>
-                )}
-              </div>
-            </li>
+          {recipe.instructions.map((inst, idx) => (
+            <React.Fragment key={inst.step}>
+              <li className="flex gap-4 items-start">
+                <span className="w-8 h-8 rounded-full bg-stone-900 text-white font-mono text-sm font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                  {inst.step}
+                </span>
+                <div className="space-y-1.5 flex-1">
+                  {inst.title && (
+                    <h3 className="font-serif text-lg font-semibold text-stone-900">
+                      {inst.title}
+                    </h3>
+                  )}
+                  <p className="text-sm text-stone-700 leading-relaxed">
+                    {inst.text}
+                  </p>
+                  {inst.tip && (
+                    <div className="mt-2 p-3 bg-amber-50/70 border border-amber-200/80 rounded-lg text-xs text-amber-950 font-medium">
+                      <strong className="block mb-0.5">Chef's Technique Tip:</strong>
+                      {inst.tip}
+                    </div>
+                  )}
+                </div>
+              </li>
+              {/* Mid-instruction ad placement */}
+              {idx === 1 && (
+                <li className="list-none py-1 no-print border-y border-stone-100 my-2">
+                  <Banner320x50 label="Mid-Recipe Sponsor" className="my-1" />
+                </li>
+              )}
+            </React.Fragment>
           ))}
         </ol>
       </section>
@@ -454,6 +467,17 @@ export const RecipeDetailView: React.FC = () => {
         onServingsChange={setServings}
         recipeTitle={recipe.title}
       />
+
+      {/* Post-Calculator Ad Banner & Smartlink */}
+      <div className="no-print my-6 space-y-4">
+        <Banner320x50 label="Nutrition & Wellness Sponsor" className="my-1" />
+        <SmartlinkCard
+          variant="amber"
+          label="Featured Whole-Food & Supplement Offers"
+          subtext="Exclusive member discounts on cold-pressed extra virgin olive oil, grass-fed collagen, and tested organic spices."
+          buttonText="Unlock Discounts"
+        />
+      </div>
 
       {/* Prominent Medical Disclaimer */}
       <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-start gap-3 text-xs text-stone-600">
@@ -518,6 +542,11 @@ export const RecipeDetailView: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Pre-Navigation Ad Banner Row */}
+      <div className="no-print my-6">
+        <BannerRow />
+      </div>
 
       {/* Dedicated Recipe Page Navigator (Previous & Next Recipe Pages) */}
       <section className="no-print pt-8 border-t-2 border-stone-200 space-y-4">

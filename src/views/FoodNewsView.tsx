@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { allArticles } from '../data/articles';
 import { ArticleCard } from '../components/ArticleCard';
+import { setPageSEO } from '../utils/seo';
 import { Newspaper, ArrowRight } from 'lucide-react';
 
 export const FoodNewsView: React.FC = () => {
   const { navigate } = useApp();
+
+  useEffect(() => {
+    setPageSEO({
+      title: 'Food News & Sustainable Agriculture | FreshNutri Magazine',
+      description: 'Investigations into regenerative farming, seafood sustainability, organic standards, and food industry trends.',
+      keywords: 'food news, sustainable agriculture, regenerative farming, organic food trends, food industry journalism',
+      canonicalPath: '/#/food-news',
+      ogType: 'website',
+    });
+  }, []);
 
   const newsArticles = allArticles.filter(
     (a) =>
